@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSession } from "./lib/auth";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
@@ -18,6 +19,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/login"
           element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
@@ -30,7 +32,6 @@ function App() {
           path="/editor/:projectId"
           element={session ? <EditorPage /> : <Navigate to="/login" />}
         />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
     </BrowserRouter>
   );

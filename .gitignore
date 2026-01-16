@@ -3,6 +3,10 @@ node_modules/
 .pnp
 .pnp.js
 
+# Bun
+.bun-cache/
+bun.lockb
+
 # Testing
 coverage/
 ARCHITECTURE.md

@@ -16,7 +16,8 @@
     "socket.io-client": "^4.7.5",
     "zustand": "^4.5.4",
     "axios": "^1.7.2",
-    "gifshot": "^0.4.5"
+    "gifshot": "^0.4.5",
+    "lenis": "^1.1.13"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

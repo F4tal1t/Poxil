@@ -21,15 +21,15 @@ A modern web-based tool for creating retro-style pixel art and frame-by-frame an
 - **Backend**: Node.js + TypeScript, Express.js, Socket.io
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better-auth
+- **Package Manager**: Bun
 - **Deployment**: Vercel
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
+- Bun 1.0+
 - PostgreSQL 14+
-- npm or yarn
 
 ### Installation
 
@@ -41,7 +41,7 @@ cd Poxil
 
 2. Install dependencies:
 ```bash
-npm run install:all
+bun install
 ```
 
 3. Set up environment variables:
@@ -54,13 +54,13 @@ cp frontend/.env.example frontend/.env
 4. Configure database:
 ```bash
 cd backend
-npx prisma migrate dev
-npx prisma generate
+bunx prisma migrate dev
+bunx prisma generate
 ```
 
 5. Start development servers:
 ```bash
-npm run dev
+bun run dev
 ```
 
 Frontend: http://localhost:5173

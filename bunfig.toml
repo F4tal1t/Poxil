@@ -1,0 +1,14 @@
+[install]
+# Use exact versions
+exact = true
+
+# Auto-install peer dependencies
+auto = true
+
+[install.cache]
+# Cache directory
+dir = ".bun-cache"
+
+[test]
+# Test configuration
+preload = ["./setup.ts"]
