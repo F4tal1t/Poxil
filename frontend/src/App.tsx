@@ -1,37 +1,41 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useSession } from "./lib/auth";
-import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+// import { useSession } from "./lib/auth";
+// import LandingPage from "./pages/LandingPage";
+// import LoginPage from "./pages/LoginPage";
+// import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
 
 function App() {
-  const { data: session, isPending } = useSession();
+  // const { data: session, isPending } = useSession();
 
-  if (isPending) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
+  // if (isPending) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-xl">Loading...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
+        {/* <Route path="/" element={<LandingPage />} /> */}
+        {/* <Route
           path="/login"
           element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/dashboard"
           element={session ? <DashboardPage /> : <Navigate to="/login" />}
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/editor/:projectId"
           element={session ? <EditorPage /> : <Navigate to="/login" />}
-        />
+        /> */}
+        
+        {/* TEMPORARY: Direct access to editor without auth */}
+        <Route path="/" element={<EditorPage />} />
+        <Route path="/editor/:projectId" element={<EditorPage />} />
       </Routes>
     </BrowserRouter>
   );

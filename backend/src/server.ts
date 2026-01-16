@@ -5,8 +5,11 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-import { auth } from "./config/auth.js";
-import projectRoutes from "./routes/projectRoutes.js";
+// import { auth } from "./config/auth.js";
+import { logger } from "./config/logger.js";
+import { register, activeConnections, pixelUpdates } from "./config/metrics.js";
+import { metricsMiddleware } from "./middleware/metrics.js";
+// import projectRoutes from "./routes/projectRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +29,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: "10mb" }));
+app.use(metricsMiddleware);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -34,11 +38,17 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Better-auth routes
-app.all("/api/auth/*", (req, res) => auth.handler(req, res));
+// Prometheus metrics endpoint
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
 
-// API routes
-app.use("/api/projects", projectRoutes);
+// Better-auth routes (DISABLED FOR NOW)
+// app.all("/api/auth/*", (req, res) => auth.handler(req, res));
+
+// API routes (DISABLED FOR NOW)
+// app.use("/api/projects", projectRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -47,24 +57,28 @@ app.get("/health", (req, res) => {
 
 // Socket.io for real-time collaboration
 io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
+  activeConnections.inc();
+  logger.info(`Client connected: ${socket.id}`);
 
   socket.on("join-project", (projectId: string) => {
     socket.join(projectId);
     socket.to(projectId).emit("user-joined", socket.id);
+    logger.info(`User ${socket.id} joined project ${projectId}`);
   });
 
   socket.on("pixel-update", (data: { projectId: string; x: number; y: number; color: string }) => {
     socket.to(data.projectId).emit("pixel-update", data);
+    pixelUpdates.inc();
   });
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
+    activeConnections.dec();
+    logger.info(`Client disconnected: ${socket.id}`);
   });
 });
 
 const PORT = process.env.PORT || 3000;
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on http://localhost:${PORT}`);
 });

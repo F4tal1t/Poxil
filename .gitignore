@@ -30,6 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+backend/logs/
 
 # OS
 .DS_Store
@@ -47,6 +48,10 @@ backend/prisma/migrations/
 
 # Vercel
 .vercel
+
+# Monitoring
+prometheus-data/
+grafana-data/
 
 # Misc
 *.pem
