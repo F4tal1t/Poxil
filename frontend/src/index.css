@@ -1,17 +1,35 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Graphit';
+  src: url('/fonts/Graphit-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Retrogression';
+  src: url('/fonts/Retrogression-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme {
   --color-primary: #6366f1;
   --color-secondary: #8b5cf6;
+  --font-primary: 'Graphit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-emphasis: 'Retrogression', 'Graphit', sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-emphasis {
+  font-family: var(--font-emphasis);
 }
 
 .canvas-grid {
@@ -20,7 +38,6 @@ body {
   image-rendering: crisp-edges;
 }
 
-/* Lenis Smooth Scroll */
 html.lenis, html.lenis body {
   height: auto;
 }

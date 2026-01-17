@@ -26,7 +26,7 @@ export default function PixelCanvas({ width, height, pixelSize, zoom, pan }: Pix
         if ((x + y) % 2 === 0) {
           ctx.fillStyle = "#e5e7eb";
         } else {
-          ctx.fillStyle = "#f3f4f6";
+          ctx.fillStyle = "#eaeaeb";
         }
         ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       }

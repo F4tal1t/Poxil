@@ -17,7 +17,9 @@
     "zustand": "^4.5.4",
     "axios": "^1.7.2",
     "gifshot": "^0.4.5",
-    "lenis": "^1.1.13"
+    "lenis": "^1.1.13",
+    "akar-icons": "^1.9.31",
+    "gsap": "^3.12.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
