@@ -20,12 +20,12 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
   };
 
   return (
-    <div className={`bg-gray-800 border border-gray-700 rounded-lg p-3 flex items-center gap-3 ${className}`}>
-      <span className="text-sm font-medium text-gray-300">Brush Size</span>
+    <div className={`bg-[#1f1c21] border border-[#2a2630] rounded-lg p-3 flex items-center gap-3 ${className}`}>
+      <span className="text-sm font-medium text-[#8c8796]">Brush Size</span>
       
       <button
         onClick={() => handleBrushSizeChange(-1)}
-        className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded transition-colors disabled:opacity-50"
+        className="p-1.5 bg-[#2a2630] hover:bg-[#35303c] rounded transition-colors disabled:opacity-50"
         disabled={currentSize <= 1}
       >
         <Minus size={14} />
@@ -38,20 +38,20 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
           max="32"
           value={currentSize}
           onChange={handleSizeInput}
-          className="w-12 h-8 text-center bg-gray-700 border border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-12 h-8 text-center bg-[#2a2630] border border-[#4a4552] rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
         />
-        <span className="text-xs text-gray-400">px</span>
+        <span className="text-xs text-[#ada8b7]">px</span>
       </div>
       
       <button
         onClick={() => handleBrushSizeChange(1)}
-        className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded transition-colors disabled:opacity-50"
+        className="p-1.5 bg-[#2a2630] hover:bg-[#35303c] rounded transition-colors disabled:opacity-50"
         disabled={currentSize >= 32}
       >
         <Plus size={14} />
       </button>
       
-      <div className="w-px h-6 bg-gray-700 mx-1" />
+      <div className="w-px h-6 bg-[#2a2630] mx-1" />
       
       <input
         type="range"
@@ -59,11 +59,11 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
         max="32"
         value={currentSize}
         onChange={handleSizeInput}
-        className="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+        className="w-24 h-2 bg-[#2a2630] rounded-lg appearance-none cursor-pointer slider"
       />
       
       {/* Visual preview of brush size */}
-      <div className="flex items-center justify-center w-12 h-8 bg-gray-700 rounded border border-gray-600">
+      <div className="flex items-center justify-center w-12 h-8 bg-[#2a2630] rounded border border-[#4a4552]">
         <div 
           className="bg-white rounded-full"
           style={{ 

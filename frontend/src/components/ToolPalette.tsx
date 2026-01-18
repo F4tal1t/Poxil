@@ -61,7 +61,7 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
 
   if (compact) {
     return (
-      <div className={`bg-gray-800 border-r border-gray-700 p-2 flex flex-col ${className}`}>
+      <div className={`bg-[#1f1c21] border-r border-[#2a2630] p-2 flex flex-col ${className}`}>
         <div className="space-y-1">
           {tools.map((tool) => {
             const Icon = tool.icon;
@@ -77,7 +77,7 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
                   className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                     isActive 
                       ? "bg-blue-600 text-white shadow-lg" 
-                      : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
+                      : "bg-[#2a2630] hover:bg-[#35303c] text-[#8c8796] hover:text-white"
                   }`}
                   title={`${tool.name} (${tool.shortcut})`}
                 >
@@ -86,10 +86,10 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
                 
                 {/* Hover tooltip */}
                 {isHovered && (
-                  <div className="absolute left-12 top-0 z-50 bg-gray-900 text-white px-3 py-2 rounded-lg shadow-xl border border-gray-600 min-w-max">
+                  <div className="absolute left-12 top-0 z-50 bg-[#151316] text-white px-3 py-2 rounded-lg shadow-xl border border-[#2a2630] min-w-max">
                     <div className="font-semibold text-sm">{tool.name}</div>
-                    <div className="text-xs text-gray-300">{tool.description}</div>
-                    <div className="text-xs text-gray-400 mt-1">Shortcut: {tool.shortcut}</div>
+                    <div className="text-xs text-[#ada8b7]">{tool.description}</div>
+                    <div className="text-xs text-[#8c8796] mt-1">Shortcut: {tool.shortcut}</div>
                   </div>
                 )}
               </div>
@@ -101,8 +101,8 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
   }
 
   return (
-    <div className={`bg-gray-800 border-r border-gray-700 p-4 flex flex-col ${className}`}>
-      <h3 className="text-sm font-semibold mb-4 text-gray-300">Tools</h3>
+    <div className={`bg-[#1f1c21] border-r border-[#2a2630] p-4 flex flex-col ${className}`}>
+      <h3 className="text-sm font-semibold mb-4 text-[#8c8796]">Tools</h3>
       
       <div className="space-y-2 mb-6">
         {tools.map((tool) => {
@@ -119,7 +119,7 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
                 className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                   isActive 
                     ? "bg-blue-600 text-white shadow-lg" 
-                    : "bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
+                    : "bg-[#2a2630] hover:bg-[#35303c] text-[#8c8796] hover:text-white"
                 }`}
               >
                 <Icon size={20} className="flex-shrink-0" />
@@ -134,10 +134,10 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
               
               {/* Hover tooltip */}
               {isHovered && (
-                <div className="absolute left-full top-0 ml-2 z-50 bg-gray-900 text-white px-3 py-2 rounded-lg shadow-xl border border-gray-600 min-w-max">
+                <div className="absolute left-full top-0 ml-2 z-50 bg-[#151316] text-white px-3 py-2 rounded-lg shadow-xl border border-[#2a2630] min-w-max">
                   <div className="font-semibold text-sm">{tool.name}</div>
-                  <div className="text-xs text-gray-300">{tool.description}</div>
-                  <div className="text-xs text-gray-400 mt-1">Shortcut: {tool.shortcut}</div>
+                  <div className="text-xs text-[#ada8b7]">{tool.description}</div>
+                  <div className="text-xs text-[#8c8796] mt-1">Shortcut: {tool.shortcut}</div>
                 </div>
               )}
             </div>
@@ -145,8 +145,8 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
         })}
       </div>
 
-      <div className="mt-auto pt-4 border-t border-gray-700">
-        <div className="text-xs text-gray-500 space-y-1">
+      <div className="mt-auto pt-4 border-t border-[#2a2630]">
+        <div className="text-xs text-[#8c8796] space-y-1">
           <div>🖱️ Left click: Primary color</div>
           <div>🖱️ Right click: Secondary color</div>
           <div>⌨️ Press tool shortcut to select</div>

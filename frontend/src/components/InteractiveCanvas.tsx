@@ -23,6 +23,8 @@ export default function InteractiveCanvas({
     Array(height).fill(null).map(() => Array(width).fill("transparent"))
   );
   const [isDrawing, setIsDrawing] = useState(false);
+  const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
+  const [cursorPixel, setCursorPixel] = useState<{x: number, y: number} | null>(null);
   
   const { 
     currentFrame, 
@@ -48,28 +50,31 @@ export default function InteractiveCanvas({
   // Render canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !currentProject) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas with subtle background
+    ctx.fillStyle = "#f8fafc"; // Very light gray background
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw pixels
-    const currentPixels = currentProject.frames[currentFrame]?.pixels || [];
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const color = currentPixels[y]?.[x] || "#ffffff";
-        if (color !== "transparent") {
-          ctx.fillStyle = color;
-          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    // Draw pixels if project exists
+    if (currentProject) {
+      const currentPixels = currentProject.frames[currentFrame]?.pixels || [];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const color = currentPixels[y]?.[x] || "transparent";
+          if (color !== "transparent") {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+          }
         }
       }
     }
 
-    // Draw grid
-    ctx.strokeStyle = "#d1d5db";
+    // Draw grid with more visible lines
+    ctx.strokeStyle = "rgba(209, 213, 219, 0.6)"; // More visible grid
     ctx.lineWidth = 1;
     for (let x = 0; x <= width; x++) {
       ctx.beginPath();
@@ -89,14 +94,23 @@ export default function InteractiveCanvas({
     // drawCanvas(); // function does not exist, rendering is handled by the effect above
   }, []);
 
-  // Get pixel coordinates from mouse position
+  // Get pixel coordinates from mouse position, accounting for zoom and pan
   const getPixelCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
 
     const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / pixelSize);
-    const y = Math.floor((e.clientY - rect.top) / pixelSize);
+    // Mouse position relative to the canvas element (already transformed)
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Convert to logical canvas coordinates (undo the zoom)
+    const logicalX = mouseX / zoom;
+    const logicalY = mouseY / zoom;
+    
+    // Convert to pixel coordinates
+    const x = Math.floor(logicalX / pixelSize);
+    const y = Math.floor(logicalY / pixelSize);
 
     if (x >= 0 && x < width && y >= 0 && y < height) {
       return { x, y };
@@ -122,6 +136,7 @@ export default function InteractiveCanvas({
     if (!coords) return;
 
     setIsDrawing(true);
+    setCursorPixel(coords);
     
     const color = e.button === 2 ? secondaryColor : primaryColor;
     
@@ -147,9 +162,19 @@ export default function InteractiveCanvas({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMousePos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+
+    const coords = getPixelCoords(e);
+    setCursorPixel(coords);
+
     if (!isDrawing) return;
     
-    const coords = getPixelCoords(e);
     if (!coords) return;
 
     const color = e.buttons === 2 ? secondaryColor : primaryColor;
@@ -160,6 +185,12 @@ export default function InteractiveCanvas({
         drawPixel(coords.x, coords.y, selectedTool.type === "eraser" ? "transparent" : color);
         break;
     }
+  };
+
+  const handleMouseLeave = () => {
+    setMousePos(null);
+    setCursorPixel(null);
+    setIsDrawing(false);
   };
 
   const handleMouseUp = () => {
@@ -217,19 +248,35 @@ export default function InteractiveCanvas({
         transformOrigin: "center",
         transition: "transform 0.05s ease-out"
       }}
-      className={className}
+      className={`relative ${className}`}
     >
       <canvas
         ref={canvasRef}
         width={width * pixelSize}
         height={height * pixelSize}
-        className="canvas-grid border-2 border-gray-600 shadow-lg cursor-crosshair"
+        className="border-2 border-gray-600 shadow-lg cursor-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onContextMenu={handleContextMenu}
       />
+      
+      {/* Custom aim cursor - positioned at pixel center */}
+      {cursorPixel && (
+        <div
+          className="absolute pointer-events-none z-10"
+          style={{
+            left: cursorPixel.x * pixelSize + pixelSize / 2 - 8,
+            top: cursorPixel.y * pixelSize + pixelSize / 2 - 8,
+            width: 16,
+            height: 16,
+          }}
+        >
+          <div className="w-full h-full border-2 border-blue-500 rounded-full bg-blue-500/20"></div>
+          <div className="absolute top-1/2 left-1/2 w-0.5 h-0.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+      )}
     </div>
   );
 }

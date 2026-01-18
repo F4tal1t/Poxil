@@ -71,34 +71,40 @@ export default function EditorPage() {
     setIsPanning(false);
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.25 : 0.25;
+    setZoom((prev) => Math.max(0.25, Math.min(4, prev + delta)));
+  };
+
   return (
     <>
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
 
-      <div className="h-screen flex flex-col bg-gray-900 text-white">
-        <header className="bg-gray-800 px-4 py-3 flex justify-between items-center border-b border-gray-700">
+      <div className="h-screen flex flex-col bg-[#151316] text-white">
+        <header className="bg-[#1f1c21] px-4 py-3 flex justify-between items-center border-b border-[#2a2630]">
           <h1 className="text-xl font-bold font-emphasis">Poxil</h1>
           <div className="flex gap-3 items-center">
             {/* Brush Size - Now at top */}
             <BrushSize />
             
-            <div className="flex gap-1 items-center bg-gray-700 rounded px-2">
+            <div className="flex gap-1 items-center bg-[#2a2630] rounded px-2">
               <button 
                 onClick={handleZoomOut}
-                className="px-3 py-2 hover:bg-gray-600 rounded transition"
+                className="px-3 py-2 hover:bg-[#35303c] rounded transition"
                 title="Zoom Out"
               >
                 <ZoomOut size={18} />
               </button>
               <button 
                 onClick={handleZoomReset}
-                className="px-3 py-2 hover:bg-gray-600 rounded transition text-sm"
+                className="px-3 py-2 hover:bg-[#35303c] rounded transition text-sm"
               >
                 {Math.round(zoom * 100)}%
               </button>
               <button 
                 onClick={handleZoomIn}
-                className="px-3 py-2 hover:bg-gray-600 rounded transition"
+                className="px-3 py-2 hover:bg-[#35303c] rounded transition"
                 title="Zoom In"
               >
                 <ZoomIn size={18} />
@@ -121,11 +127,12 @@ export default function EditorPage() {
           
           {/* Canvas Area */}
           <div 
-            className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-gray-850"
+            className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-[#151316]"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             onContextMenu={(e) => e.preventDefault()}
             style={{ cursor: isPanning ? 'grabbing' : 'default' }}
           >
