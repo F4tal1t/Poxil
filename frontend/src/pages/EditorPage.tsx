@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ZoomIn, ZoomOut, Save, Download, Plus } from "akar-icons";
 import CanvasSizeDialog from "../components/CanvasSizeDialog";
-import PixelCanvas from "../components/PixelCanvas";
+import InteractiveCanvas from "../components/InteractiveCanvas";
+import ToolPalette from "../components/ToolPalette";
+import BrushSize from "../components/BrushSize";
+import ColorPalette from "../components/ColorPalette";
+import { useEditorStore } from "../lib/store";
 
-const COLOR_PRESETS = [
-  "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF",
-  "#FFFF00", "#FF00FF", "#00FFFF", "#FFA500", "#800080",
-  "#FFC0CB", "#A52A2A", "#808080", "#C0C0C0", "#FFD700",
-  "#4B0082", "#FF6347", "#40E0D0", "#EE82EE", "#F5DEB3",
-];
+
 
 export default function EditorPage() {
   const { projectId } = useParams();
@@ -19,12 +18,32 @@ export default function EditorPage() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const [selectedColor, setSelectedColor] = useState("#000000");
+  
+  const { setCurrentProject } = useEditorStore();
   const pixelSize = 16;
 
   const handleCanvasCreate = (width: number, height: number) => {
     setCanvasSize({ width, height });
     setShowDialog(false);
+    
+    // Initialize project in store
+    const newProject = {
+      id: projectId || "temp-project",
+      name: "New Project",
+      width,
+      height,
+      frames: [{
+        id: "frame-1",
+        pixels: Array(height).fill(null).map(() => Array(width).fill("transparent")),
+        duration: 100
+      }],
+      isPublic: false,
+      userId: "temp-user",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    setCurrentProject(newProject);
   };
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 4));
@@ -59,7 +78,10 @@ export default function EditorPage() {
       <div className="h-screen flex flex-col bg-gray-900 text-white">
         <header className="bg-gray-800 px-4 py-3 flex justify-between items-center border-b border-gray-700">
           <h1 className="text-xl font-bold font-emphasis">Poxil</h1>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-3 items-center">
+            {/* Brush Size - Now at top */}
+            <BrushSize />
+            
             <div className="flex gap-1 items-center bg-gray-700 rounded px-2">
               <button 
                 onClick={handleZoomOut}
@@ -94,8 +116,12 @@ export default function EditorPage() {
         </header>
 
         <main className="flex-1 flex overflow-hidden">
+          {/* Tool Palette - Left Side (Compact) */}
+          <ToolPalette compact className="w-14" />
+          
+          {/* Canvas Area */}
           <div 
-            className="flex-1 flex items-center justify-center p-4 overflow-hidden"
+            className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-gray-850"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -103,7 +129,7 @@ export default function EditorPage() {
             onContextMenu={(e) => e.preventDefault()}
             style={{ cursor: isPanning ? 'grabbing' : 'default' }}
           >
-            <PixelCanvas 
+            <InteractiveCanvas 
               width={canvasSize.width} 
               height={canvasSize.height}
               pixelSize={pixelSize}
@@ -112,48 +138,8 @@ export default function EditorPage() {
             />
           </div>
 
-          <aside className="w-64 bg-gray-800 p-4 border-l border-gray-700 overflow-y-auto">
-            <h3 className="font-semibold mb-4 text-lg">Colors</h3>
-            
-            <div className="mb-4">
-              <label className="block text-sm mb-2">Selected Color</label>
-              <div className="flex gap-2 items-center">
-                <div 
-                  className="w-12 h-12 rounded border-2 border-gray-600"
-                  style={{ backgroundColor: selectedColor }}
-                />
-                <input 
-                  type="color" 
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  className="flex-1 h-12 rounded cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2">Color Palette</label>
-              <div className="grid grid-cols-5 gap-2">
-                {COLOR_PRESETS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 rounded border-2 transition ${
-                      selectedColor === color ? 'border-white scale-110' : 'border-gray-600'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-6 border-t border-gray-700">
-              <p className="text-sm text-gray-400">Canvas: {canvasSize.width}x{canvasSize.height}</p>
-              <p className="text-sm text-gray-400">Zoom: {Math.round(zoom * 100)}%</p>
-              <p className="text-sm text-gray-500 mt-2">Hold Shift or Middle Click to pan</p>
-            </div>
-          </aside>
+          {/* Color Palette - Right Side (Optimized) */}
+          <ColorPalette className="w-64" />
         </main>
 
         <footer className="bg-gray-800 px-4 py-3 border-t border-gray-700">

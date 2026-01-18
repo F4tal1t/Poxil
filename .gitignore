@@ -56,3 +56,4 @@ grafana-data/
 # Misc
 *.pem
 .cache/
+frontend/ICON_REQUIREMENTS.md

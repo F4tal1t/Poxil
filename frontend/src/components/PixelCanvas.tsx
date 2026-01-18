@@ -20,7 +20,6 @@ export default function PixelCanvas({ width, height, pixelSize, zoom, pan }: Pix
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const checkerSize = pixelSize;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if ((x + y) % 2 === 0) {
