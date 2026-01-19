@@ -6,6 +6,7 @@ import InteractiveCanvas from "../components/InteractiveCanvas";
 import ToolPalette from "../components/ToolPalette";
 import ColorPalette from "../components/ColorPalette";
 import TopToolbar from "../components/TopToolbar";
+import Header from "../components/Header";
 import { useEditorStore } from "../lib/store";
 
 export default function EditorPage() {
@@ -81,6 +82,7 @@ export default function EditorPage() {
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
 
       <div className="h-screen flex flex-col bg-[#151316] text-white">
+        <Header />
         <TopToolbar 
           zoom={zoom}
           onZoomIn={handleZoomIn}
