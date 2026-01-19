@@ -8,6 +8,7 @@ interface InteractiveCanvasProps {
   zoom: number;
   pan: { x: number; y: number };
   className?: string;
+  onPixelHover?: (pos: { x: number; y: number } | null) => void;
 }
 
 export default function InteractiveCanvas({ 
@@ -16,7 +17,8 @@ export default function InteractiveCanvas({
   pixelSize, 
   zoom, 
   pan, 
-  className = ""
+  className = "",
+  onPixelHover
 }: InteractiveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pixels, setPixels] = useState<string[][]>(
@@ -33,7 +35,9 @@ export default function InteractiveCanvas({
     secondaryColor, 
     currentProject,
     updatePixel,
-    setCurrentProject 
+    setCurrentProject,
+    mirrorX,
+    mirrorY
   } = useEditorStore();
 
   // Initialize pixels from current project/frame
@@ -118,17 +122,64 @@ export default function InteractiveCanvas({
     return null;
   };
 
-  // Draw pixel
-  const drawPixel = useCallback((x: number, y: number, color: string) => {
-    const newPixels = pixels.map(row => [...row]);
-    newPixels[y][x] = color;
-    setPixels(newPixels);
-    
-    // Update in store
+  // Batch draw pixels
+  const drawPixels = useCallback((points: { x: number; y: number; color: string }[]) => {
+    setPixels(prev => {
+      const newPixels = prev.map(row => [...row]);
+      points.forEach(({ x, y, color }) => {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          newPixels[y][x] = color;
+        }
+      });
+      return newPixels;
+    });
+
     if (currentProject) {
-      updatePixel(currentFrame, x, y, color);
+      points.forEach(({ x, y, color }) => {
+        updatePixel(currentFrame, x, y, color);
+      });
     }
-  }, [pixels, currentProject, currentFrame, updatePixel]);
+  }, [width, height, currentProject, currentFrame, updatePixel]);
+
+  // Draw with brush size (square brush) and mirror support
+  const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {
+    const brushSize = selectedTool.size || 1;
+    const halfSize = Math.floor(brushSize / 2);
+    const pointsToDraw: { x: number; y: number; color: string }[] = [];
+
+    const addPoint = (x: number, y: number) => {
+      if (x >= 0 && x < width && y >= 0 && y < height) {
+        pointsToDraw.push({ x, y, color });
+      }
+    };
+
+    // Calculate points for the primary brush stroke
+    for (let dy = -halfSize; dy <= halfSize; dy++) {
+      for (let dx = -halfSize; dx <= halfSize; dx++) {
+        const x = centerX + dx;
+        const y = centerY + dy;
+        
+        addPoint(x, y);
+
+        // Mirror X
+        if (mirrorX) {
+          addPoint(width - 1 - x, y);
+        }
+
+        // Mirror Y
+        if (mirrorY) {
+          addPoint(x, height - 1 - y);
+        }
+
+        // Mirror Both
+        if (mirrorX && mirrorY) {
+          addPoint(width - 1 - x, height - 1 - y);
+        }
+      }
+    }
+    
+    drawPixels(pointsToDraw);
+  }, [selectedTool.size, width, height, mirrorX, mirrorY, drawPixels]);
 
   // Handle mouse events
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -142,16 +193,16 @@ export default function InteractiveCanvas({
     
     switch (selectedTool.type) {
       case "pencil":
-        drawPixel(coords.x, coords.y, color);
+        drawWithBrush(coords.x, coords.y, color);
         break;
       case "eraser":
-        drawPixel(coords.x, coords.y, "transparent");
+        drawWithBrush(coords.x, coords.y, "transparent");
         break;
       case "picker":
         const pickedColor = pixels[coords.y][coords.x];
         if (pickedColor !== "transparent") {
-          // You might want to update primary color here
-          // useEditorStore.getState().setPrimaryColor(pickedColor);
+          // Update primary color in store
+          useEditorStore.getState().setPrimaryColor(pickedColor);
         }
         break;
       case "fill":
@@ -172,6 +223,7 @@ export default function InteractiveCanvas({
 
     const coords = getPixelCoords(e);
     setCursorPixel(coords);
+    if (onPixelHover) onPixelHover(coords);
 
     if (!isDrawing) return;
     
@@ -182,7 +234,7 @@ export default function InteractiveCanvas({
     switch (selectedTool.type) {
       case "pencil":
       case "eraser":
-        drawPixel(coords.x, coords.y, selectedTool.type === "eraser" ? "transparent" : color);
+        drawWithBrush(coords.x, coords.y, selectedTool.type === "eraser" ? "transparent" : color);
         break;
     }
   };
@@ -191,6 +243,7 @@ export default function InteractiveCanvas({
     setMousePos(null);
     setCursorPixel(null);
     setIsDrawing(false);
+    if (onPixelHover) onPixelHover(null);
   };
 
   const handleMouseUp = () => {

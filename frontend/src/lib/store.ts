@@ -9,6 +9,9 @@ interface EditorState {
   secondaryColor: string;
   isPlaying: boolean;
   showOnionSkin: boolean;
+  mirrorX: boolean;
+  mirrorY: boolean;
+  pixelPerfect: boolean;
   
   setCurrentProject: (project: Project | null) => void;
   setCurrentFrame: (frame: number) => void;
@@ -17,6 +20,9 @@ interface EditorState {
   setSecondaryColor: (color: string) => void;
   setIsPlaying: (playing: boolean) => void;
   toggleOnionSkin: () => void;
+  toggleMirrorX: () => void;
+  toggleMirrorY: () => void;
+  togglePixelPerfect: () => void;
   addFrame: () => void;
   deleteFrame: (index: number) => void;
   updatePixel: (frameIndex: number, x: number, y: number, color: string) => void;
@@ -30,6 +36,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   secondaryColor: "#ffffff",
   isPlaying: false,
   showOnionSkin: false,
+  mirrorX: false,
+  mirrorY: false,
+  pixelPerfect: false,
 
   setCurrentProject: (project) => set({ currentProject: project }),
   setCurrentFrame: (frame) => set({ currentFrame: frame }),
@@ -38,6 +47,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   setSecondaryColor: (color) => set({ secondaryColor: color }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   toggleOnionSkin: () => set((state) => ({ showOnionSkin: !state.showOnionSkin })),
+  toggleMirrorX: () => set((state) => ({ mirrorX: !state.mirrorX })),
+  toggleMirrorY: () => set((state) => ({ mirrorY: !state.mirrorY })),
+  togglePixelPerfect: () => set((state) => ({ pixelPerfect: !state.pixelPerfect })),
   
   addFrame: () =>
     set((state) => {

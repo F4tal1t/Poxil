@@ -10,7 +10,7 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
   const currentSize = selectedTool.size || 1;
 
   const handleBrushSizeChange = (delta: number) => {
-    const newSize = Math.max(1, Math.min(32, currentSize + delta));
+    const newSize = Math.max(1, Math.min(10, currentSize + delta));
     setSelectedTool({ ...selectedTool, size: newSize });
   };
 
@@ -35,7 +35,7 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
         <input
           type="number"
           min="1"
-          max="32"
+          max="10"
           value={currentSize}
           onChange={handleSizeInput}
           className="w-12 h-8 text-center bg-[#2a2630] border border-[#4a4552] rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
@@ -46,7 +46,7 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
       <button
         onClick={() => handleBrushSizeChange(1)}
         className="p-1.5 bg-[#2a2630] hover:bg-[#35303c] rounded transition-colors disabled:opacity-50"
-        disabled={currentSize >= 32}
+        disabled={currentSize >= 10}
       >
         <Plus size={14} />
       </button>
@@ -56,22 +56,11 @@ export default function BrushSize({ className = "" }: BrushSizeProps) {
       <input
         type="range"
         min="1"
-        max="32"
+        max="10"
         value={currentSize}
         onChange={handleSizeInput}
         className="w-24 h-2 bg-[#2a2630] rounded-lg appearance-none cursor-pointer slider"
       />
-      
-      {/* Visual preview of brush size */}
-      <div className="flex items-center justify-center w-12 h-8 bg-[#2a2630] rounded border border-[#4a4552]">
-        <div 
-          className="bg-white rounded-full"
-          style={{ 
-            width: `${Math.min(currentSize * 2, 16)}px`, 
-            height: `${Math.min(currentSize * 2, 16)}px` 
-          }}
-        />
-      </div>
     </div>
   );
 }

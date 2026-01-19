@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { ZoomIn, ZoomOut, Save, Download, Plus } from "akar-icons";
+import { Plus } from "akar-icons";
 import CanvasSizeDialog from "../components/CanvasSizeDialog";
 import InteractiveCanvas from "../components/InteractiveCanvas";
 import ToolPalette from "../components/ToolPalette";
-import BrushSize from "../components/BrushSize";
 import ColorPalette from "../components/ColorPalette";
+import TopToolbar from "../components/TopToolbar";
 import { useEditorStore } from "../lib/store";
-
-
 
 export default function EditorPage() {
   const { projectId } = useParams();
@@ -18,6 +16,7 @@ export default function EditorPage() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
   
   const { setCurrentProject } = useEditorStore();
   const pixelSize = 16;
@@ -82,49 +81,24 @@ export default function EditorPage() {
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
 
       <div className="h-screen flex flex-col bg-[#151316] text-white">
-        <header className="bg-[#1f1c21] px-4 py-3 flex justify-between items-center border-b border-[#2a2630]">
-          <h1 className="text-xl font-bold font-emphasis">Poxil</h1>
-          <div className="flex gap-3 items-center">
-            {/* Brush Size - Now at top */}
-            <BrushSize />
-            
-            <div className="flex gap-1 items-center bg-[#2a2630] rounded px-2">
-              <button 
-                onClick={handleZoomOut}
-                className="px-3 py-2 hover:bg-[#35303c] rounded transition"
-                title="Zoom Out"
-              >
-                <ZoomOut size={18} />
-              </button>
-              <button 
-                onClick={handleZoomReset}
-                className="px-3 py-2 hover:bg-[#35303c] rounded transition text-sm"
-              >
-                {Math.round(zoom * 100)}%
-              </button>
-              <button 
-                onClick={handleZoomIn}
-                className="px-3 py-2 hover:bg-[#35303c] rounded transition"
-                title="Zoom In"
-              >
-                <ZoomIn size={18} />
-              </button>
-            </div>
-            <button className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition flex items-center gap-2">
-              <Save size={18} />
-              Save
-            </button>
-            <button className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition flex items-center gap-2">
-              <Download size={18} />
-              Export
-            </button>
-          </div>
-        </header>
+        <TopToolbar 
+          zoom={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onZoomReset={handleZoomReset}
+          mousePos={mousePos}
+          canvasSize={canvasSize}
+        />
 
-        <main className="flex-1 flex overflow-hidden">
+        <main className="flex-1 flex overflow-hidden relative">
           {/* Tool Palette - Left Side (Compact) */}
           <ToolPalette compact className="w-14" />
           
+          {/* Coordinate Display Overlay */}
+          <div className="absolute top-4 left-20 z-10 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded text-xs font-mono text-white/80 pointer-events-none border border-white/10">
+            {mousePos ? `${mousePos.x}, ${mousePos.y}` : `${canvasSize.width}x${canvasSize.height}px`}
+          </div>
+
           {/* Canvas Area */}
           <div 
             className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-[#151316]"
@@ -142,6 +116,7 @@ export default function EditorPage() {
               pixelSize={pixelSize}
               zoom={zoom}
               pan={pan}
+              onPixelHover={setMousePos}
             />
           </div>
 
