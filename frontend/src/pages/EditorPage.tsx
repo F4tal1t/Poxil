@@ -82,7 +82,7 @@ export default function EditorPage() {
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
 
       <div className="h-screen flex flex-col bg-[#151316] text-white">
-        <Header />
+        <Header onNewFile={() => setShowDialog(true)} />
         <TopToolbar 
           zoom={zoom}
           onZoomIn={handleZoomIn}
