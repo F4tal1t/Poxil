@@ -76,7 +76,7 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
                   onMouseLeave={() => setHoveredTool(null)}
                   className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                     isActive 
-                      ? "bg-blue-600 text-white shadow-lg" 
+                      ? "bg-[#df4c16] text-white shadow-lg" 
                       : "bg-[#2a2630] hover:bg-[#35303c] text-[#8c8796] hover:text-white"
                   }`}
                   title={`${tool.name} (${tool.shortcut})`}
@@ -118,7 +118,7 @@ export default function ToolPalette({ className = "", compact = false }: ToolPal
                 onMouseLeave={() => setHoveredTool(null)}
                 className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                   isActive 
-                    ? "bg-blue-600 text-white shadow-lg" 
+                    ? "bg-[#df4c16] text-white shadow-lg" 
                     : "bg-[#2a2630] hover:bg-[#35303c] text-[#8c8796] hover:text-white"
                 }`}
               >

@@ -17,7 +17,7 @@ export default function CanvasSizeDialog({ onConfirm }: CanvasSizeDialogProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
+      <div className="bg-gray-800 text-white rounded-lg p-6 max-w-md w-full">
         <h2 className="text-2xl font-bold mb-4">Create New Canvas</h2>
         
         <div className="space-y-4">
@@ -66,7 +66,7 @@ export default function CanvasSizeDialog({ onConfirm }: CanvasSizeDialogProps) {
 
           <button
             onClick={() => onConfirm(width, height)}
-            className="w-full px-4 py-3 bg-blue-600 rounded hover:bg-blue-700 font-semibold"
+            className="w-full px-4 py-3 bg-[#df4c16] rounded hover:bg-[#E95620] font-semibold"
           >
             Create Canvas
           </button>

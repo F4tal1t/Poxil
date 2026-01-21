@@ -78,7 +78,7 @@ export default function InteractiveCanvas({
     }
 
     // Draw grid with more visible lines
-    ctx.strokeStyle = "rgba(209, 213, 219, 0.6)"; // More visible grid
+    ctx.strokeStyle = "rgba(209, 213, 219, 0.3)"; 
     ctx.lineWidth = 1;
     for (let x = 0; x <= width; x++) {
       ctx.beginPath();

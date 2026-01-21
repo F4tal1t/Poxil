@@ -1,15 +1,18 @@
 import { Project } from "../types";
 
-export const exportProjectAsImage = (project: Project | null) => {
+export const exportProjectAsImage = (project: Project | null, scale: number = 1) => {
   if (!project) return;
   
   // Create a temporary canvas
   const canvas = document.createElement("canvas");
-  canvas.width = project.width;
-  canvas.height = project.height;
+  canvas.width = project.width * scale;
+  canvas.height = project.height * scale;
   const ctx = canvas.getContext("2d");
   
   if (!ctx) return;
+
+  // Ensure pixel art remains crisp
+  ctx.imageSmoothingEnabled = false;
 
   // Get the first frame (or current frame logic if you prefer)
   const frame = project.frames[0]; 
@@ -19,7 +22,8 @@ export const exportProjectAsImage = (project: Project | null) => {
     row.forEach((color, x) => {
       if (color && color !== "transparent") {
         ctx.fillStyle = color;
-        ctx.fillRect(x, y, 1, 1);
+        // Scale the position and size of each pixel
+        ctx.fillRect(x * scale, y * scale, scale, scale);
       }
     });
   });

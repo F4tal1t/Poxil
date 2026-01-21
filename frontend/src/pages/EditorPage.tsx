@@ -46,8 +46,8 @@ export default function EditorPage() {
     setCurrentProject(newProject);
   };
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 4));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.25));
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 4));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.1));
   const handleZoomReset = () => setZoom(1);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -73,8 +73,8 @@ export default function EditorPage() {
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.25 : 0.25;
-    setZoom((prev) => Math.max(0.25, Math.min(4, prev + delta)));
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom((prev) => Math.max(0.1, Math.min(4, prev + delta)));
   };
 
   return (
@@ -131,7 +131,7 @@ export default function EditorPage() {
             <button className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">
               Frame 1
             </button>
-            <button className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition flex items-center gap-2">
+            <button className="px-4 py-2 bg-[#df4c16] rounded hover:bg-[#E95620] transition flex items-center gap-2">
               <Plus size={18} />
               Add Frame
             </button>

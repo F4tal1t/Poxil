@@ -36,7 +36,7 @@ export default function LandingPage() {
           <div className="flex gap-4 justify-center">
             <Link
               to="/login"
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-lg font-semibold transition"
+              className="px-8 py-4 bg-[#df4c16] hover:bg-[#E95620] rounded-lg text-lg font-semibold transition"
             >
               Get Started
             </Link>

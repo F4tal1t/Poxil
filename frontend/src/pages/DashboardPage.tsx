@@ -60,7 +60,7 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold">My Projects</h2>
           <button
             onClick={createProject}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-[#df4c16] text-white rounded hover:bg-[#E95620]"
           >
             New Project
           </button>
