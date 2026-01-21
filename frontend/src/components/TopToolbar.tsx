@@ -15,7 +15,6 @@ interface TopToolbarProps {
 export default function TopToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, mousePos, canvasSize }: TopToolbarProps) {
   const { 
     selectedTool, 
-    pixelPerfect, togglePixelPerfect,
     mirrorX, toggleMirrorX,
     mirrorY, toggleMirrorY
   } = useEditorStore();
@@ -29,17 +28,7 @@ export default function TopToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, mou
             {selectedTool.type}:
           </span>
           
-          <div className="flex items-center gap-2">
-             <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors select-none">
-               <input 
-                 type="checkbox" 
-                 checked={pixelPerfect}
-                 onChange={togglePixelPerfect}
-                 className="rounded bg-[#2a2630] border-gray-600 focus:ring-blue-500 text-blue-500 w-3.5 h-3.5 cursor-pointer"
-               />
-               Pixel Perfect
-             </label>
-          </div>
+          
         </div>
 
         {/* Brush Size Component - Integrated here */}

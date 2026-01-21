@@ -11,6 +11,7 @@ export interface Project {
   description?: string;
   width: number;
   height: number;
+  layers: Layer[];
   frames: Frame[];
   isPublic: boolean;
   userId: string;
@@ -18,14 +19,24 @@ export interface Project {
   updatedAt: string;
 }
 
+export interface Layer {
+  id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+  opacity: number;
+}
+
 export interface Frame {
   id: string;
-  pixels: string[][];
+  // Map of LayerID -> Method of storing pixels
+  // We keep it flat as possible or mapped
+  layers: Record<string, string[][]>;
   duration: number;
 }
 
 export interface Tool {
-  type: "pencil" | "eraser" | "picker" | "fill" | "line" | "rectangle";
+  type: "pencil" | "eraser" | "picker" | "fill" | "line" | "rectangle" | "circle";
   size: number;
 }
 

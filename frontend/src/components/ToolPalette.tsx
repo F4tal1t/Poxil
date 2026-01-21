@@ -25,6 +25,24 @@ const FillBucketIcon = () => (
   </svg>
 );
 
+const LineIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <path d="M4 20L20 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const RectangleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const CircleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 interface ToolPaletteProps {
   className?: string;
   compact?: boolean;
@@ -35,6 +53,9 @@ const tools = [
   { id: "eraser", name: "Eraser", icon: EraserIcon, shortcut: "E", description: "Remove pixels (make transparent)" },
   { id: "fill", name: "Fill", icon: FillBucketIcon, shortcut: "F", description: "Fill an area with the selected color" },
   { id: "picker", name: "Picker", icon: ColorPickerIcon, shortcut: "I", description: "Pick a color from the canvas" },
+  { id: "line", name: "Line", icon: LineIcon, shortcut: "L", description: "Draw straight lines" },
+  { id: "rectangle", name: "Rectangle", icon: RectangleIcon, shortcut: "R", description: "Draw rectangles" },
+  { id: "circle", name: "Circle", icon: CircleIcon, shortcut: "C", description: "Draw circles" },
 ];
 
 export default function ToolPalette({ className = "", compact = false }: ToolPaletteProps) {

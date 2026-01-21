@@ -16,16 +16,31 @@ export const exportProjectAsImage = (project: Project | null, scale: number = 1)
 
   // Get the first frame (or current frame logic if you prefer)
   const frame = project.frames[0]; 
+  const layers = project.layers || [];
 
-  // Draw pixels
-  frame.pixels.forEach((row, y) => {
-    row.forEach((color, x) => {
-      if (color && color !== "transparent") {
-        ctx.fillStyle = color;
-        // Scale the position and size of each pixel
-        ctx.fillRect(x * scale, y * scale, scale, scale);
-      }
+  // Draw background first
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw pixels from all visible layers
+  [...layers].reverse().forEach(layer => {
+    if (!layer.visible) return;
+    const grid = frame.layers[layer.id];
+    if (!grid) return;
+
+    ctx.globalAlpha = layer.opacity / 100;
+    
+    grid.forEach((row, y) => {
+      row.forEach((color, x) => {
+        if (color && color !== "transparent") {
+          ctx.fillStyle = color;
+          // Scale the position and size of each pixel
+          ctx.fillRect(x * scale, y * scale, scale, scale);
+        }
+      });
     });
+    
+    ctx.globalAlpha = 1.0;
   });
 
   // Convert to data URL and trigger download

@@ -4,7 +4,7 @@ import { Plus } from "akar-icons";
 import CanvasSizeDialog from "../components/CanvasSizeDialog";
 import InteractiveCanvas from "../components/InteractiveCanvas";
 import ToolPalette from "../components/ToolPalette";
-import ColorPalette from "../components/ColorPalette";
+import RightSidebar from "../components/RightSidebar";
 import TopToolbar from "../components/TopToolbar";
 import Header from "../components/Header";
 import { useEditorStore } from "../lib/store";
@@ -27,14 +27,20 @@ export default function EditorPage() {
     setShowDialog(false);
     
     // Initialize project in store
+    const defaultLayerId = "layer-1";
     const newProject = {
       id: projectId || "temp-project",
       name: "New Project",
       width,
       height,
+      layers: [
+        { id: defaultLayerId, name: "Layer 1", visible: true, locked: false, opacity: 100 }
+      ],
       frames: [{
         id: "frame-1",
-        pixels: Array(height).fill(null).map(() => Array(width).fill("transparent")),
+        layers: {
+          [defaultLayerId]: Array(height).fill(null).map(() => Array(width).fill("transparent"))
+        },
         duration: 100
       }],
       isPublic: false,
@@ -122,8 +128,7 @@ export default function EditorPage() {
             />
           </div>
 
-          {/* Color Palette - Right Side (Optimized) */}
-          <ColorPalette className="w-64" />
+          <RightSidebar className="w-72 flex-shrink-0" />
         </main>
 
         <footer className="bg-gray-800 px-4 py-3 border-t border-gray-700">

@@ -1,6 +1,74 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useEditorStore } from "../lib/store";
 
+// Helper functions for geometric shapes
+function getLinePoints(x0: number, y0: number, x1: number, y1: number) {
+  const points: {x: number, y: number}[] = [];
+  const dx = Math.abs(x1 - x0);
+  const dy = Math.abs(y1 - y0);
+  const sx = (x0 < x1) ? 1 : -1;
+  const sy = (y0 < y1) ? 1 : -1;
+  let err = dx - dy;
+
+  while(true) {
+    points.push({x: x0, y: y0});
+    if ((x0 === x1) && (y0 === y1)) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 < dx) { err += dx; y0 += sy; }
+  }
+  return points;
+}
+
+function getRectanglePoints(x0: number, y0: number, x1: number, y1: number) {
+  const points: {x: number, y: number}[] = [];
+  const minX = Math.min(x0, x1);
+  const maxX = Math.max(x0, x1);
+  const minY = Math.min(y0, y1);
+  const maxY = Math.max(y0, y1);
+  
+  for (let x = minX; x <= maxX; x++) {
+    points.push({x, y: minY});
+    points.push({x, y: maxY});
+  }
+  for (let y = minY; y <= maxY; y++) {
+    points.push({x: minX, y});
+    points.push({x: maxX, y});
+  }
+  return points;
+}
+
+function getCirclePoints(x0: number, y0: number, x1: number, y1: number) {
+  const points: {x: number, y: number}[] = [];
+  const r = Math.floor(Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2)));
+  let x = 0;
+  let y = r;
+  let d = 3 - 2 * r;
+
+  const addSymmetry = (cx: number, cy: number, x: number, y: number) => {
+    points.push({x: cx + x, y: cy + y});
+    points.push({x: cx - x, y: cy + y});
+    points.push({x: cx + x, y: cy - y});
+    points.push({x: cx - x, y: cy - y});
+    points.push({x: cx + y, y: cy + x});
+    points.push({x: cx - y, y: cy + x});
+    points.push({x: cx + y, y: cy - x});
+    points.push({x: cx - y, y: cy - x});
+  };
+
+  while (y >= x) {
+    addSymmetry(x0, y0, x, y);
+    x++;
+    if (d > 0) {
+      y--;
+      d = d + 4 * (x - y) + 10;
+    } else {
+      d = d + 4 * x + 6;
+    }
+  }
+  return points;
+}
+
 interface InteractiveCanvasProps {
   width: number;
   height: number;
@@ -21,15 +89,14 @@ export default function InteractiveCanvas({
   onPixelHover
 }: InteractiveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [pixels, setPixels] = useState<string[][]>(
-    Array(height).fill(null).map(() => Array(width).fill("transparent"))
-  );
   const [isDrawing, setIsDrawing] = useState(false);
+  const [startPos, setStartPos] = useState<{x: number, y: number} | null>(null);
   const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
   const [cursorPixel, setCursorPixel] = useState<{x: number, y: number} | null>(null);
   
   const { 
-    currentFrame, 
+    currentFrame,
+    activeLayerId,
     selectedTool, 
     primaryColor, 
     secondaryColor, 
@@ -40,17 +107,6 @@ export default function InteractiveCanvas({
     mirrorY
   } = useEditorStore();
 
-  // Initialize pixels from current project/frame
-  useEffect(() => {
-    if (currentProject?.frames[currentFrame]?.pixels) {
-      setPixels(currentProject.frames[currentFrame].pixels);
-    } else {
-      // Initialize with transparent pixels or a default pattern
-      const initialPixels = Array(height).fill(null).map(() => Array(width).fill("transparent"));
-      setPixels(initialPixels);
-    }
-  }, [currentProject, currentFrame, width, height]);
-
   // Render canvas
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -59,26 +115,44 @@ export default function InteractiveCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas with subtle background
-    ctx.fillStyle = "#f8fafc"; // Very light gray background
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw background (checkers)
+    const checkSize = pixelSize; // Or smaller
+    // Fill white
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    // Draw grid lines or checkers if needed, but for now transparent is transparent
+    
     // Draw pixels if project exists
     if (currentProject) {
-      const currentPixels = currentProject.frames[currentFrame]?.pixels || [];
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const color = currentPixels[y]?.[x] || "transparent";
-          if (color !== "transparent") {
-            ctx.fillStyle = color;
-            ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+      const frame = currentProject.frames[currentFrame];
+      const layers = currentProject.layers || [];
+      
+      // Render from Bottom to Top
+      [...layers].reverse().forEach(layer => {
+        if (!layer.visible) return;
+        const grid = frame?.layers[layer.id];
+        if (!grid) return;
+        
+        ctx.globalAlpha = layer.opacity / 100;
+        
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const color = grid[y]?.[x] || "transparent";
+            if (color !== "transparent") {
+              ctx.fillStyle = color;
+              ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+            }
           }
         }
-      }
+        ctx.globalAlpha = 1.0;
+      });
     }
 
-    // Draw grid with more visible lines
-    ctx.strokeStyle = "rgba(209, 213, 219, 0.3)"; 
+    // Draw grid
+    ctx.strokeStyle = "rgba(0,0,0, 0.1)"; 
     ctx.lineWidth = 1;
     for (let x = 0; x <= width; x++) {
       ctx.beginPath();
@@ -92,7 +166,30 @@ export default function InteractiveCanvas({
       ctx.lineTo(width * pixelSize, y * pixelSize);
       ctx.stroke();
     }
-  }, [width, height, pixelSize, currentProject, currentFrame]);
+
+    // Draw shape preview
+    if (isDrawing && startPos && cursorPixel) {
+      const toolType = selectedTool.type;
+      if (["line", "rectangle", "circle"].includes(toolType)) {
+        let points: {x: number, y: number}[] = [];
+        
+        if (toolType === "line") {
+          points = getLinePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        } else if (toolType === "rectangle") {
+          points = getRectanglePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        } else if (toolType === "circle") {
+          points = getCirclePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        }
+
+        ctx.fillStyle = primaryColor; // Use primary color for preview
+        points.forEach(p => {
+            if (p.x >= 0 && p.x < width && p.y >= 0 && p.y < height) {
+                ctx.fillRect(p.x * pixelSize, p.y * pixelSize, pixelSize, pixelSize);
+            }
+        });
+      }
+    }
+  }, [width, height, pixelSize, currentProject, currentFrame, isDrawing, startPos, cursorPixel, selectedTool, primaryColor]);
 
   useEffect(() => {
     // drawCanvas(); // function does not exist, rendering is handled by the effect above
@@ -124,19 +221,12 @@ export default function InteractiveCanvas({
 
   // Batch draw pixels
   const drawPixels = useCallback((points: { x: number; y: number; color: string }[]) => {
-    setPixels(prev => {
-      const newPixels = prev.map(row => [...row]);
+    if (currentProject) {
+      // NOTE: Ideally we would have a batch update in the store to avoid multiple re-renders
       points.forEach(({ x, y, color }) => {
         if (x >= 0 && x < width && y >= 0 && y < height) {
-          newPixels[y][x] = color;
+          updatePixel(currentFrame, x, y, color);
         }
-      });
-      return newPixels;
-    });
-
-    if (currentProject) {
-      points.forEach(({ x, y, color }) => {
-        updatePixel(currentFrame, x, y, color);
       });
     }
   }, [width, height, currentProject, currentFrame, updatePixel]);
@@ -188,6 +278,7 @@ export default function InteractiveCanvas({
 
     setIsDrawing(true);
     setCursorPixel(coords);
+    setStartPos(coords); // Track start position for shapes
     
     const color = e.button === 2 ? secondaryColor : primaryColor;
     
@@ -199,10 +290,15 @@ export default function InteractiveCanvas({
         drawWithBrush(coords.x, coords.y, "transparent");
         break;
       case "picker":
-        const pickedColor = pixels[coords.y][coords.x];
-        if (pickedColor !== "transparent") {
-          // Update primary color in store
-          useEditorStore.getState().setPrimaryColor(pickedColor);
+        if (currentProject && activeLayerId) {
+          const frame = currentProject.frames[currentFrame];
+          const layerGrid = frame?.layers[activeLayerId];
+          const pickedColor = layerGrid?.[coords.y]?.[coords.x];
+          
+          if (pickedColor && pickedColor !== "transparent") {
+            // Update primary color in store
+            useEditorStore.getState().setPrimaryColor(pickedColor);
+          }
         }
         break;
       case "fill":
@@ -242,24 +338,46 @@ export default function InteractiveCanvas({
   const handleMouseLeave = () => {
     setMousePos(null);
     setCursorPixel(null);
+    setStartPos(null);
     setIsDrawing(false);
     if (onPixelHover) onPixelHover(null);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (isDrawing && startPos && cursorPixel) {
+      const toolType = selectedTool.type;
+      if (["line", "rectangle", "circle"].includes(toolType)) {
+        let points: {x: number, y: number}[] = [];
+        if (toolType === "line") {
+          points = getLinePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        } else if (toolType === "rectangle") {
+          points = getRectanglePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        } else if (toolType === "circle") {
+          points = getCirclePoints(startPos.x, startPos.y, cursorPixel.x, cursorPixel.y);
+        }
+
+        const color = e.button === 2 ? secondaryColor : primaryColor;
+        const pointsToDraw = points.map(p => ({ x: p.x, y: p.y, color }));
+        drawPixels(pointsToDraw);
+      }
+    }
     setIsDrawing(false);
+    setStartPos(null);
   };
 
   // Flood fill algorithm
   const floodFill = useCallback((startX: number, startY: number, fillColor: string) => {
-    if (!currentProject) return;
+    if (!currentProject || !activeLayerId) return;
     
-    const currentPixels = currentProject.frames[currentFrame]?.pixels || [];
-    const targetColor = currentPixels[startY]?.[startX] || "transparent";
+    const frame = currentProject.frames[currentFrame];
+    const layerGrid = frame?.layers[activeLayerId];
+    if (!layerGrid) return;
+
+    const targetColor = layerGrid[startY]?.[startX] || "transparent";
     
     if (targetColor === fillColor) return;
     
-    const newPixels = currentPixels.map(row => [...row]);
+    const newLayerGrid = layerGrid.map(row => [...row]);
     const stack = [[startX, startY]];
     const visited = new Set<string>();
     
@@ -268,26 +386,31 @@ export default function InteractiveCanvas({
       const key = `${x},${y}`;
       
       if (visited.has(key) || x < 0 || x >= width || y < 0 || y >= height) continue;
-      if ((currentPixels[y]?.[x] || "transparent") !== targetColor) continue;
+      
+      const currentColor = newLayerGrid[y]?.[x] || "transparent";
+      if (currentColor !== targetColor) continue;
       
       visited.add(key);
-      newPixels[y][x] = fillColor;
+      newLayerGrid[y][x] = fillColor;
       
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
     }
     
-    // Update the entire frame
+    // Update the active layer for the frame
     const newFrames = [...currentProject.frames];
     newFrames[currentFrame] = {
       ...newFrames[currentFrame],
-      pixels: newPixels
+      layers: {
+        ...newFrames[currentFrame].layers,
+        [activeLayerId]: newLayerGrid
+      }
     };
     
     setCurrentProject({
       ...currentProject,
       frames: newFrames
     });
-  }, [currentProject, currentFrame, width, height, setCurrentProject]);
+  }, [currentProject, currentFrame, activeLayerId, width, height, setCurrentProject]);
 
   // Prevent context menu on right click
   const handleContextMenu = (e: React.MouseEvent) => {

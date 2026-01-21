@@ -5,11 +5,22 @@ interface ColorPaletteProps {
   className?: string;
 }
 
-const COLOR_PRESETS = [
-  "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF",
-  "#FFFF00", "#FF00FF", "#00FFFF", "#FFA500", "#800080",
-  "#FFC0CB", "#A52A2A", "#808080", "#C0C0C0", "#FFD700",
-  "#4B0082", "#FF6347", "#40E0D0", "#EE82EE", "#F5DEB3",
+const COLOR_PRESETS = [ 
+  "#000000", "#2b2b2b", "#555555", "#808080", "#aaaaaa", "#d4d4d4", "#ffffff",  
+  "#2b0000", "#550000", "#800000", "#aa0000", "#d40000", "#ff0000", "#ff5555",
+  "#2b1400", "#552b00", "#804000", "#aa5500", "#d46a00", "#ff8000", "#ffaa55",
+  "#1a0d00", "#331a00", "#4d2600", "#663300", "#804000", "#994d00", "#b35900",
+  "#2b2b00", "#555500", "#808000", "#aaaa00", "#d4d400", "#ffff00", "#ffff55",
+  "#142b00", "#2b5500", "#408000", "#55aa00", "#6ad400", "#80ff00", "#aaff55",
+  "#002b00", "#005500", "#008000", "#00aa00", "#00d400", "#00ff00", "#55ff55",
+  "#002b14", "#00552b", "#008040", "#00aa55", "#00d46a", "#00ff80", "#55ffaa",
+  "#002b2b", "#005555", "#008080", "#00aaaa", "#00d4d4", "#00ffff", "#55ffff",
+  "#00142b", "#002b55", "#004080", "#0055aa", "#006ad4", "#0080ff", "#55aaff",
+  "#00002b", "#000055", "#000080", "#0000aa", "#0000d4", "#0000ff", "#5555ff",
+  "#14002b", "#2b0055", "#400080", "#5500aa", "#6a00d4", "#8000ff", "#aa55ff",
+  "#2b002b", "#550055", "#800080", "#aa00aa", "#d400d4", "#ff00ff", "#ff55ff",
+  "#2b0014", "#55002b", "#800040", "#aa0055", "#d4006a", "#ff0080", "#ff55aa",
+  "#2b000d", "#55001a", "#800026", "#aa0033", "#d40040", "#ff004d", "#ff5588",
 ];
 
 export default function ColorPalette({ className = "" }: ColorPaletteProps) {
@@ -47,21 +58,19 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
   };
 
   return (
-    <div className={`bg-[#1f1c21] border-l border-[#2a2630] p-4 flex flex-col ${className}`}>
-      <h3 className="text-sm font-semibold mb-4 text-[#8c8796]">Colors</h3>
+    <div className={`bg-[#1f1c21] border-l border-[#2a2630] flex flex-col ${className}`}>
       
-      {/* Primary and Secondary Color Display */}
-      <div className="mb-6">
+      <div className="p-4 border-b border-[#2a2630]">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <div 
-              className="w-16 h-16 rounded-lg border-2 border-[#4a4552] cursor-pointer transition-transform hover:scale-105"
+              className="w-16 h-16 border-2 border-[#4a4552] cursor-pointer transition-transform hover:scale-105"
               style={{ backgroundColor: secondaryColor }}
               onClick={() => setShowCustomColor(!showCustomColor)}
               title="Secondary color (Right click)"
             />
             <div 
-              className="w-16 h-16 rounded-lg border-2 border-[#4a4552] cursor-pointer transition-transform hover:scale-105 absolute -top-2 -left-2"
+              className="w-16 h-16 border-2 border-[#4a4552] cursor-pointer transition-transform hover:scale-105 absolute -top-2 -left-2"
               style={{ backgroundColor: primaryColor }}
               onClick={() => setShowCustomColor(!showCustomColor)}
               title="Primary color (Left click)"
@@ -71,15 +80,14 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
         
         <button 
           onClick={swapColors}
-          className="w-full px-3 py-2 bg-[#2a2630] hover:bg-[#35303c] rounded text-sm transition-colors mb-3"
+          className="w-full px-3 py-2 bg-[#2a2630] hover:bg-[#35303c] text-sm transition-colors mb-2"
         >
           Swap Colors
         </button>
       </div>
 
-      {/* Custom Color Pickers */}
       {showCustomColor && (
-        <div className="mb-4 p-3 bg-[#2a2630] rounded-lg">
+        <div className="p-4 bg-[#1a181c] border-b border-[#2a2630]">
           <div className="space-y-3">
             <div>
               <label className="block text-xs text-[#ada8b7] mb-1">Primary</label>
@@ -87,7 +95,7 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
                 type="color"
                 value={primaryColor}
                 onChange={(e) => handleCustomColorChange(e, true)}
-                className="w-full h-8 rounded cursor-pointer bg-[#35303c]"
+                className="w-full h-8 cursor-pointer bg-[#35303c] border-none"
               />
             </div>
             <div>
@@ -96,7 +104,7 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
                 type="color"
                 value={secondaryColor}
                 onChange={(e) => handleCustomColorChange(e, false)}
-                className="w-full h-8 rounded cursor-pointer bg-[#35303c]"
+                className="w-full h-8 cursor-pointer bg-[#35303c] border-none"
               />
             </div>
           </div>
@@ -104,41 +112,37 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
       )}
 
       {/* Color Palette */}
-      <div className="mb-4">
+      <div className="p-4 bg-[#1f1c21]">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-xs font-semibold text-[#ada8b7]">Palette</h4>
-          <button 
-            onClick={() => setShowCustomColor(!showCustomColor)}
-            className="text-xs text-blue-400 hover:text-blue-300"
-          >
-            {showCustomColor ? "Hide" : "Custom"}
-          </button>
+          <h4 className="text-xs font-semibold text-[#8c8796] uppercase tracking-wide">Palette</h4>
         </div>
-        <div className="grid grid-cols-5 gap-2">
-          {COLOR_PRESETS.map((color) => (
-            <button
-              key={color}
-              onClick={() => handleColorSelect(color, true)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleColorSelect(color, false);
-              }}
-              className={`w-8 h-8 rounded border-2 transition-all duration-150 hover:scale-110 ${
-                primaryColor === color ? 'border-white scale-110' : 
-                secondaryColor === color ? 'border-[#ada8b7]' : 
-                'border-[#4a4552]'
-              }`}
-              style={{ backgroundColor: color }}
-              title={`${color} (Left click for primary, Right click for secondary)`}
-            />
-          ))}
+        <div className="max-h-60 overflow-y-auto pr-1">
+          <div className="grid grid-cols-7 gap-0 border border-[#2a2630]">
+            {COLOR_PRESETS.map((color, idx) => (
+              <button
+                key={`${color}-${idx}`}
+                onClick={() => handleColorSelect(color, true)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  handleColorSelect(color, false);
+                }}
+                className={`w-full aspect-square border transition-all duration-150 ${
+                  primaryColor === color ? 'border-white z-20 scale-110 shadow-lg' : 
+                  secondaryColor === color ? 'border-[#ada8b7] z-20' : 
+                  'border-[#2a2630] hover:border-gray-500 hover:z-10'
+                }`}
+                style={{ backgroundColor: color }}
+                title={`${color} (Left click for primary, Right click for secondary)`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Recently Used Colors */}
-      <div className="mt-auto pt-4 border-t border-[#2a2630]">
-        <h4 className="text-xs font-semibold mb-2 text-[#ada8b7]">Recent</h4>
-        <div className="flex gap-2 flex-wrap min-h-[24px]">
+      <div className="mt-auto p-4 pt-0 border-t border-[#2a2630]">
+        <h4 className="text-xs font-semibold mb-2 mt-4 text-[#8c8796] uppercase tracking-wide">Recent</h4>
+        <div className="grid grid-cols-5 gap-1 min-h-[24px]">
           {recentColors.length > 0 ? (
             recentColors.map((color, index) => (
               <button
@@ -148,21 +152,27 @@ export default function ColorPalette({ className = "" }: ColorPaletteProps) {
                   e.preventDefault();
                   handleColorSelect(color, false);
                 }}
-                className="w-6 h-6 rounded border border-[#4a4552] hover:scale-110 transition-transform"
+                className="w-full aspect-square border border-[#35303c] hover:border-gray-500 transition-all"
                 style={{ backgroundColor: color }}
                 title={color}
               />
             ))
           ) : (
-            <div className="text-xs text-[#8c8796] italic">No recent colors</div>
+            <div className="col-span-5 text-xs text-[#5f5a6b] italic text-center py-2">No recent colors</div>
           )}
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-[#2a2630]">
-        <div className="text-xs text-[#8c8796] space-y-1">
-          <div>🖱️ Left click: Primary</div>
-          <div>🖱️ Right click: Secondary</div>
+      <div className="p-4 border-t border-[#2a2630] bg-[#1a181c]">
+        <div className="text-[10px] text-[#5f5a6b] space-y-1 font-medium">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#8c8796]"></span>
+            L-Click: Primary Color
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full border border-[#8c8796]"></span>
+            R-Click: Secondary Color
+          </div>
         </div>
       </div>
     </div>
