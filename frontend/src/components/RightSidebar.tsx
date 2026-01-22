@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, TrashBin, EyeOpen, EyeSlashed, LockOn, LockOff } from "akar-icons";
 import { useEditorStore } from "../lib/store";
 import ColorPalette from "./ColorPalette";
@@ -21,6 +21,18 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
   } = useEditorStore();
   
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setReferenceImage(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Preview rendering logic
   useEffect(() => {
@@ -106,6 +118,27 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
               height={200}
               className="max-w-full max-h-[200px]"
            />
+        </div>
+      </div>
+
+      {/* Reference Module */}
+      <div className="p-4 border-b border-[#2a2630]">
+        <h3 className="text-xs font-bold text-[#8c8796] mb-2 uppercase tracking-wider">Reference</h3>
+        <div className="bg-[#151316] rounded-lg p-2 min-h-[100px] border border-[#2a2630] flex flex-col items-center justify-center relative overflow-hidden group">
+            {referenceImage ? (
+                <>
+                  <img src={referenceImage} className="max-w-full max-h-[150px] object-contain" />
+                  <button onClick={() => setReferenceImage(null)} className="absolute top-1 right-1 bg-black/50 p-1 rounded hover:bg-red-500/50 text-white opacity-0 group-hover:opacity-100 transition">
+                    <TrashBin size={12} />
+                  </button>
+                </>
+            ) : (
+                <label className="cursor-pointer text-gray-500 hover:text-white flex flex-col items-center gap-1 w-full h-full justify-center min-h-[100px]">
+                    <Plus size={20} />
+                    <span className="text-xs">Add Image</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                </label>
+            )}
         </div>
       </div>
 

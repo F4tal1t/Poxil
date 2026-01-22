@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Plus } from "akar-icons";
+import Timeline from "../components/Timeline";
+import { useEditorStore } from "../lib/store";
+import Header from "../components/Header";
+import TopToolbar from "../components/TopToolbar";
+import ToolPalette from "../components/ToolPalette";
 import CanvasSizeDialog from "../components/CanvasSizeDialog";
 import InteractiveCanvas from "../components/InteractiveCanvas";
-import ToolPalette from "../components/ToolPalette";
 import RightSidebar from "../components/RightSidebar";
-import TopToolbar from "../components/TopToolbar";
-import Header from "../components/Header";
-import { useEditorStore } from "../lib/store";
 
 export default function EditorPage() {
   const { projectId } = useParams();
@@ -131,17 +131,7 @@ export default function EditorPage() {
           <RightSidebar className="w-72 flex-shrink-0" />
         </main>
 
-        <footer className="bg-gray-800 px-4 py-3 border-t border-gray-700">
-          <div className="flex gap-2 items-center">
-            <button className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition">
-              Frame 1
-            </button>
-            <button className="px-4 py-2 bg-[#df4c16] rounded hover:bg-[#E95620] transition flex items-center gap-2">
-              <Plus size={18} />
-              Add Frame
-            </button>
-          </div>
-        </footer>
+        <Timeline />
       </div>
     </>
   );

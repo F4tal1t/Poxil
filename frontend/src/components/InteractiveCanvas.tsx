@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useEditorStore } from "../lib/store";
+import { getCharPixels } from "../lib/pixelFont";
 
 // Helper functions for geometric shapes
 function getLinePoints(x0: number, y0: number, x1: number, y1: number) {
@@ -91,6 +92,7 @@ export default function InteractiveCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState<{x: number, y: number} | null>(null);
+  const [selection, setSelection] = useState<{ start: {x: number, y: number}, end: {x: number, y: number} } | null>(null);
   const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
   const [cursorPixel, setCursorPixel] = useState<{x: number, y: number} | null>(null);
   
@@ -104,7 +106,8 @@ export default function InteractiveCanvas({
     updatePixel,
     setCurrentProject,
     mirrorX,
-    mirrorY
+    mirrorY,
+    showOnionSkin
   } = useEditorStore();
 
   // Render canvas
@@ -130,6 +133,32 @@ export default function InteractiveCanvas({
       const frame = currentProject.frames[currentFrame];
       const layers = currentProject.layers || [];
       
+      // ONION SKIN RENDER (Previous Frame)
+      if (showOnionSkin && currentFrame > 0) {
+        const prevFrame = currentProject.frames[currentFrame - 1];
+        if (prevFrame) {
+            // Render visible layers of prev frame at low opacity
+             [...layers].reverse().forEach(layer => {
+                if (!layer.visible) return;
+                const grid = prevFrame.layers[layer.id];
+                 if (!grid) return;
+                 
+                 ctx.globalAlpha = 0.3; // Onion skin fixed opacity
+                 
+                 for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const color = grid[y]?.[x] || "transparent";
+                        if (color !== "transparent") {
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                        }
+                    }
+                }
+             });
+             ctx.globalAlpha = 1.0;
+        }
+      }
+
       // Render from Bottom to Top
       [...layers].reverse().forEach(layer => {
         if (!layer.visible) return;
@@ -167,10 +196,53 @@ export default function InteractiveCanvas({
       ctx.stroke();
     }
 
+    // Draw active selection
+    if (selection) {
+      const minX = Math.min(selection.start.x, selection.end.x);
+      const minY = Math.min(selection.start.y, selection.end.y);
+      const w = Math.abs(selection.end.x - selection.start.x) + 1;
+      const h = Math.abs(selection.end.y - selection.start.y) + 1;
+
+      ctx.strokeStyle = "#fff";
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1; // Thinner
+      ctx.strokeRect(minX * pixelSize, minY * pixelSize, w * pixelSize, h * pixelSize);
+      
+      ctx.strokeStyle = "#000";
+      ctx.lineDashOffset = 4;
+      ctx.strokeRect(minX * pixelSize, minY * pixelSize, w * pixelSize, h * pixelSize);
+      
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+      ctx.lineDashOffset = 0;
+    }
+
     // Draw shape preview
     if (isDrawing && startPos && cursorPixel) {
       const toolType = selectedTool.type;
-      if (["line", "rectangle", "circle"].includes(toolType)) {
+      
+      if (toolType === "selection") {
+        // Only draw new selection box if likely creating new selection (not moving)
+        const inExistingSelection = selection && 
+             startPos.x >= Math.min(selection.start.x, selection.end.x) && 
+             startPos.x <= Math.max(selection.start.x, selection.end.x) &&
+             startPos.y >= Math.min(selection.start.y, selection.end.y) &&
+             startPos.y <= Math.max(selection.start.y, selection.end.y);
+
+        if (!inExistingSelection) {
+            const minX = Math.min(startPos.x, cursorPixel.x);
+            const minY = Math.min(startPos.y, cursorPixel.y);
+            const w = Math.abs(cursorPixel.x - startPos.x) + 1;
+            const h = Math.abs(cursorPixel.y - startPos.y) + 1;
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(minX * pixelSize, minY * pixelSize, w * pixelSize, h * pixelSize);
+            ctx.setLineDash([]);
+        }
+      }
+      else if (["line", "rectangle", "circle"].includes(toolType)) {
         let points: {x: number, y: number}[] = [];
         
         if (toolType === "line") {
@@ -189,7 +261,7 @@ export default function InteractiveCanvas({
         });
       }
     }
-  }, [width, height, pixelSize, currentProject, currentFrame, isDrawing, startPos, cursorPixel, selectedTool, primaryColor]);
+  }, [width, height, pixelSize, currentProject, currentFrame, isDrawing, startPos, cursorPixel, selectedTool, primaryColor, selection]);
 
   useEffect(() => {
     // drawCanvas(); // function does not exist, rendering is handled by the effect above
@@ -271,10 +343,39 @@ export default function InteractiveCanvas({
     drawPixels(pointsToDraw);
   }, [selectedTool.size, width, height, mirrorX, mirrorY, drawPixels]);
 
+  const drawTextOnCanvas = useCallback((text: string, x: number, y: number, color: string) => {
+    const points: {x: number, y: number, color: string}[] = [];
+    let cursorX = x;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const pixels = getCharPixels(char);
+        
+        // Always 5x5 by definition in pixelFont.ts
+        const charH = pixels.length;
+        const charW = pixels[0].length; 
+
+        for (let py = 0; py < charH; py++) {
+            for (let px = 0; px < charW; px++) {
+                 if (pixels[py][px] === 1) {
+                     points.push({ x: cursorX + px, y: y + py, color });
+                 }
+            }
+        }
+        cursorX += charW + 1; // 1px spacing
+    }
+    
+    drawPixels(points);
+  }, [drawPixels]);
+
   // Handle mouse events
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const coords = getPixelCoords(e);
     if (!coords) return;
+
+    if (selection && selectedTool.type !== "move" && selectedTool.type !== "selection") {
+      setSelection(null);
+    }
 
     setIsDrawing(true);
     setCursorPixel(coords);
@@ -283,6 +384,19 @@ export default function InteractiveCanvas({
     const color = e.button === 2 ? secondaryColor : primaryColor;
     
     switch (selectedTool.type) {
+      case "text":
+        // Slight timeout to avoid React state update clashes if any
+        setTimeout(() => {
+          const text = prompt("Enter text:");
+          if (text) {
+              drawTextOnCanvas(text, coords.x, coords.y, color);
+          }
+        }, 10);
+        setIsDrawing(false);
+        break;
+      case "selection":
+        setSelection(null);
+        break;
       case "pencil":
         drawWithBrush(coords.x, coords.y, color);
         break;
@@ -328,6 +442,37 @@ export default function InteractiveCanvas({
     const color = e.buttons === 2 ? secondaryColor : primaryColor;
     
     switch (selectedTool.type) {
+      case "selection":
+         if (selection && startPos && isDrawing) {
+             const dx = coords.x - startPos.x;
+             const dy = coords.y - startPos.y;
+             
+             // Check if we started INSIDE the selection
+             const minX = Math.min(selection.start.x, selection.end.x);
+             const maxX = Math.max(selection.start.x, selection.end.x);
+             const minY = Math.min(selection.start.y, selection.end.y);
+             const maxY = Math.max(selection.start.y, selection.end.y);
+
+             // If cursor was inside selection when drag started, we move the selection
+             // Note: startPos is fixed at MouseDown. cursorPixel changes.
+             // We need to know if startPos was inside selection.
+             const startInSelection = startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY;
+             
+             if (startInSelection) {
+                 // Move mode
+                 if (dx !== 0 || dy !== 0) {
+                     setSelection({
+                        start: { x: selection.start.x + dx, y: selection.start.y + dy },
+                        end: { x: selection.end.x + dx, y: selection.end.y + dy }
+                     });
+                     setStartPos(coords); // Update start to avoid exponential movement
+                 }
+             } else {
+                 // New selection mode handled in Draw Shape Preview usually?
+                 // Actually selection is drawn in real time in the effect
+             }
+         }
+         break;
       case "pencil":
       case "eraser":
         drawWithBrush(coords.x, coords.y, selectedTool.type === "eraser" ? "transparent" : color);
@@ -346,6 +491,26 @@ export default function InteractiveCanvas({
   const handleMouseUp = (e: React.MouseEvent) => {
     if (isDrawing && startPos && cursorPixel) {
       const toolType = selectedTool.type;
+
+      if (toolType === "selection") {
+         // Check if we were moving
+         if (selection) {
+             const minX = Math.min(selection.start.x, selection.end.x);
+             const maxX = Math.max(selection.start.x, selection.end.x);
+             const minY = Math.min(selection.start.y, selection.end.y);
+             const maxY = Math.max(selection.start.y, selection.end.y);
+             const startInSelection = startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY;
+             
+             if (!startInSelection) {
+                 // Created new selection
+                 setSelection({ start: startPos, end: cursorPixel });
+             }
+         } else {
+             // Created first selection
+             setSelection({ start: startPos, end: cursorPixel });
+         }
+      }
+
       if (["line", "rectangle", "circle"].includes(toolType)) {
         let points: {x: number, y: number}[] = [];
         if (toolType === "line") {

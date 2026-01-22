@@ -5,11 +5,11 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-// import { auth } from "./config/auth.js";
+import { auth } from "./config/auth.js";
 import { logger } from "./config/logger.js";
 import { register, activeConnections, pixelUpdates } from "./config/metrics.js";
 import { metricsMiddleware } from "./middleware/metrics.js";
-// import projectRoutes from "./routes/projectRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
 
 dotenv.config();
 
@@ -44,11 +44,11 @@ app.get("/metrics", async (req, res) => {
   res.end(await register.metrics());
 });
 
-// Better-auth routes (DISABLED FOR NOW)
-// app.all("/api/auth/*", (req, res) => auth.handler(req, res));
+// Better-auth routes
+app.all("/api/auth/*", (req, res) => auth.handler(req, res));
 
-// API routes (DISABLED FOR NOW)
-// app.use("/api/projects", projectRoutes);
+// API routes
+app.use("/api/projects", projectRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

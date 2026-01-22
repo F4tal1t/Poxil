@@ -27,6 +27,7 @@ interface EditorState {
   togglePixelPerfect: () => void;
   
   addFrame: () => void;
+  duplicateFrame: (index: number) => void;
   deleteFrame: (index: number) => void;
   
   addLayer: () => void;
@@ -93,7 +94,39 @@ export const useEditorStore = create<EditorState>((set) => ({
           ...state.currentProject,
           frames: [...state.currentProject.frames, newFrame],
         },
+        currentFrame: state.currentProject.frames.length // Switch to new frame
       };
+    }),
+
+  duplicateFrame: (index: number) =>
+    set((state) => {
+        if (!state.currentProject) return state;
+        
+        const sourceFrame = state.currentProject.frames[index];
+        if (!sourceFrame) return state;
+
+        // Deep copy layers
+        const newLayers: Record<string, string[][]> = {};
+        Object.entries(sourceFrame.layers).forEach(([layerId, grid]) => {
+            newLayers[layerId] = grid.map(row => [...row]);
+        });
+
+        const newFrame: Frame = {
+            id: crypto.randomUUID(),
+            duration: sourceFrame.duration,
+            layers: newLayers
+        };
+
+        const newFrames = [...state.currentProject.frames];
+        newFrames.splice(index + 1, 0, newFrame);
+
+        return {
+            currentProject: {
+                ...state.currentProject,
+                frames: newFrames
+            },
+            currentFrame: index + 1
+        };
     }),
 
   deleteFrame: (index) =>

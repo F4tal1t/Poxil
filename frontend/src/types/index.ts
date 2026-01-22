@@ -36,7 +36,7 @@ export interface Frame {
 }
 
 export interface Tool {
-  type: "pencil" | "eraser" | "picker" | "fill" | "line" | "rectangle" | "circle";
+  type: "pencil" | "eraser" | "picker" | "fill" | "line" | "rectangle" | "circle" | "move" | "selection" | "text";
   size: number;
 }
 

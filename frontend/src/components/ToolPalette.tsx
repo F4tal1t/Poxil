@@ -43,6 +43,31 @@ const CircleIcon = () => (
   </svg>
 );
 
+const MoveIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <path d="M5 9L2 12L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 5L12 2L15 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M19 9L22 12L19 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M15 19L12 22L9 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 2V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SelectionIcon = () => (
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/>
+  </svg>
+);
+
+const TextIcon = () => (
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+    <path d="M4 7V4H20V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 20H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 interface ToolPaletteProps {
   className?: string;
   compact?: boolean;
@@ -56,6 +81,8 @@ const tools = [
   { id: "line", name: "Line", icon: LineIcon, shortcut: "L", description: "Draw straight lines" },
   { id: "rectangle", name: "Rectangle", icon: RectangleIcon, shortcut: "R", description: "Draw rectangles" },
   { id: "circle", name: "Circle", icon: CircleIcon, shortcut: "C", description: "Draw circles" },
+  { id: "selection", name: "Selection", icon: SelectionIcon, shortcut: "S", description: "Select an area" },
+  { id: "text", name: "Text", icon: TextIcon, shortcut: "T", description: "Add text" },
 ];
 
 export default function ToolPalette({ className = "", compact = false }: ToolPaletteProps) {
