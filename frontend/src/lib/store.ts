@@ -13,6 +13,8 @@ interface EditorState {
   mirrorX: boolean;
   mirrorY: boolean;
   pixelPerfect: boolean;
+  tileMode: boolean;
+  tileLayout: { x: number, y: number };
   
   setCurrentProject: (project: Project | null) => void;
   setCurrentFrame: (frame: number) => void;
@@ -25,6 +27,8 @@ interface EditorState {
   toggleMirrorX: () => void;
   toggleMirrorY: () => void;
   togglePixelPerfect: () => void;
+  toggleTileMode: () => void;
+  setTileLayout: (layout: { x: number, y: number }) => void;
   
   addFrame: () => void;
   duplicateFrame: (index: number) => void;
@@ -34,15 +38,27 @@ interface EditorState {
   deleteLayer: (id: string) => void;
   toggleLayerVisibility: (id: string) => void;
   toggleLayerLock: (id: string) => void;
+  renameLayer: (id: string, name: string) => void;
   updateLayerOpacity: (id: string, opacity: number) => void;
   
   updatePixel: (frameIndex: number, x: number, y: number, color: string) => void;
+  updatePixels: (frameIndex: number, updates: {x: number, y: number, color: string}[]) => void;
+  undo: () => void;
+  redo: () => void;
+  pushToHistory: () => void;
+  clearCanvas: () => void;
 }
 
 const createGrid = (width: number, height: number) => 
   Array(height).fill(null).map(() => Array(width).fill("transparent"));
 
-export const useEditorStore = create<EditorState>((set) => ({
+// Simple history stack implementation
+interface HistoryState {
+  past: Project[];
+  future: Project[];
+}
+
+export const useEditorStore = create<EditorState & HistoryState>((set, get) => ({
   currentProject: null,
   currentFrame: 0,
   activeLayerId: null,
@@ -54,15 +70,91 @@ export const useEditorStore = create<EditorState>((set) => ({
   mirrorX: false,
   mirrorY: false,
   pixelPerfect: false,
+  tileMode: false,
+  tileLayout: { x: 3, y: 3 }, // Default 3x3
+  past: [],
+  future: [],
 
   setCurrentProject: (project) => set((state) => {
     let activeId = state.activeLayerId;
     if (project && project.layers && project.layers.length > 0) {
       activeId = project.layers[0].id;
     }
-    return { currentProject: project, activeLayerId: activeId };
+    // Reset history when loading new project
+    return { currentProject: project, activeLayerId: activeId, past: [], future: [] };
   }),
   
+  // History Helpers
+  pushToHistory: () => {
+     const state = get();
+     if(state.currentProject) {
+        // Limit history size to 20
+        const newPast = [...state.past, JSON.parse(JSON.stringify(state.currentProject))]; 
+        if(newPast.length > 20) newPast.shift();
+        
+        set({ past: newPast, future: [] });
+     }
+  },
+
+  undo: () => set((state) => {
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1];
+      const newPast = state.past.slice(0, state.past.length - 1);
+      
+      if (!state.currentProject) return state;
+      
+      return {
+          past: newPast,
+          future: [state.currentProject, ...state.future],
+          currentProject: previous
+      };
+  }),
+
+  redo: () => set((state) => {
+      if (state.future.length === 0) return state;
+      const next = state.future[0];
+      const newFuture = state.future.slice(1);
+      
+      if (!state.currentProject) return state;
+
+      return {
+          past: [...state.past, state.currentProject],
+          future: newFuture,
+          currentProject: next
+      };
+  }),
+
+  clearCanvas: () => set((state) => {
+     if (!state.currentProject || !state.activeLayerId) return state;
+     
+     // Save state for undo
+     const currentProj = JSON.parse(JSON.stringify(state.currentProject));
+     
+     // Clear only active layer on current frame
+     const frame = state.currentProject.frames[state.currentFrame];
+     const newGrid = createGrid(state.currentProject.width, state.currentProject.height);
+     
+     const newFrame = {
+         ...frame,
+         layers: {
+             ...frame.layers,
+             [state.activeLayerId]: newGrid
+         }
+     };
+     
+     const newFrames = [...state.currentProject.frames];
+     newFrames[state.currentFrame] = newFrame;
+     
+     return {
+         past: [...state.past, currentProj],
+         future: [],
+         currentProject: {
+             ...state.currentProject,
+             frames: newFrames
+         }
+     };
+  }),
+
   setCurrentFrame: (frame) => set({ currentFrame: frame }),
   setActiveLayer: (layerId) => set({ activeLayerId: layerId }),
   setSelectedTool: (tool) => set({ selectedTool: tool }),
@@ -72,11 +164,14 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleOnionSkin: () => set((state) => ({ showOnionSkin: !state.showOnionSkin })),
   toggleMirrorX: () => set((state) => ({ mirrorX: !state.mirrorX })),
   toggleMirrorY: () => set((state) => ({ mirrorY: !state.mirrorY })),
+  toggleTileMode: () => set((state) => ({ tileMode: !state.tileMode })),
   togglePixelPerfect: () => set((state) => ({ pixelPerfect: !state.pixelPerfect })),
+  setTileLayout: (layout) => set({ tileLayout: layout }),
   
   addFrame: () =>
     set((state) => {
       if (!state.currentProject) return state;
+      const historyProj = JSON.parse(JSON.stringify(state.currentProject)); // Snapshot
       
       const newFrame: Frame = {
         id: crypto.randomUUID(),
@@ -90,6 +185,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       });
 
       return {
+        past: [...state.past, historyProj],
+        future: [],
         currentProject: {
           ...state.currentProject,
           frames: [...state.currentProject.frames, newFrame],
@@ -101,6 +198,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   duplicateFrame: (index: number) =>
     set((state) => {
         if (!state.currentProject) return state;
+        const historyProj = JSON.parse(JSON.stringify(state.currentProject)); // Snapshot
         
         const sourceFrame = state.currentProject.frames[index];
         if (!sourceFrame) return state;
@@ -121,6 +219,8 @@ export const useEditorStore = create<EditorState>((set) => ({
         newFrames.splice(index + 1, 0, newFrame);
 
         return {
+            past: [...state.past, historyProj],
+            future: [],
             currentProject: {
                 ...state.currentProject,
                 frames: newFrames
@@ -132,8 +232,12 @@ export const useEditorStore = create<EditorState>((set) => ({
   deleteFrame: (index) =>
     set((state) => {
       if (!state.currentProject || state.currentProject.frames.length <= 1) return state;
+      const historyProj = JSON.parse(JSON.stringify(state.currentProject)); // Snapshot
+
       const frames = state.currentProject.frames.filter((_, i) => i !== index);
       return {
+        past: [...state.past, historyProj],
+        future: [],
         currentProject: { ...state.currentProject, frames },
         currentFrame: Math.min(state.currentFrame, frames.length - 1),
       };
@@ -142,6 +246,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   addLayer: () => 
     set((state) => {
       if (!state.currentProject) return state;
+      const historyProj = JSON.parse(JSON.stringify(state.currentProject)); // Snapshot
       
       const newLayer: Layer = {
         id: crypto.randomUUID(),
@@ -160,6 +265,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       }));
       
       return {
+        past: [...state.past, historyProj],
+        future: [],
         currentProject: {
           ...state.currentProject,
           layers: [newLayer, ...state.currentProject.layers],
@@ -172,6 +279,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   deleteLayer: (id) =>
     set((state) => {
       if (!state.currentProject || state.currentProject.layers.length <= 1) return state;
+      const historyProj = JSON.parse(JSON.stringify(state.currentProject)); // Snapshot
       
       const newLayers = state.currentProject.layers.filter(l => l.id !== id);
       
@@ -187,6 +295,8 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
       
       return {
+        past: [...state.past, historyProj],
+        future: [],
         currentProject: {
           ...state.currentProject,
           layers: newLayers,
@@ -214,9 +324,21 @@ export const useEditorStore = create<EditorState>((set) => ({
       return { currentProject: { ...state.currentProject, layers: newLayers } };
     }),
 
+  renameLayer: (id, name) =>
+    set((state) => {
+      if (!state.currentProject) return state;
+      const newLayers = state.currentProject.layers.map(l => 
+        l.id === id ? { ...l, name } : l
+      );
+      return { currentProject: { ...state.currentProject, layers: newLayers } };
+    }),
+
   updateLayerOpacity: (id, opacity) =>
     set((state) => {
       if (!state.currentProject) return state;
+      const previous = JSON.parse(JSON.stringify(state.currentProject)); // Debouncing might be better here but simple history for now
+      // Actually opacity change is frequent, maybe don't push to history on every drag?
+      // For now we don't push history for opacity to avoid spam
       const newLayers = state.currentProject.layers.map(l => 
         l.id === id ? { ...l, opacity } : l
       );
@@ -230,15 +352,54 @@ export const useEditorStore = create<EditorState>((set) => ({
       const layer = state.currentProject.layers.find(l => l.id === state.activeLayerId);
       if (layer?.locked || !layer?.visible) return state;
 
+      // NOTE: History logic moved to InteractiveCanvas.tsx (e.g., onMouseDown) 
+      // OR we just assume every batch of drawing updates *one* history state?
+      // Since updatePixel is called PER PIXEL during drag, we cannot push history here.
+      // We need a separate 'commitAction' or manipulate 'past' in UI component.
+      // FIX: Implementation of history for Drawing needs to happen at "MouseUp" level in component
+      // OR we provide a method to snapshot state.
+      
       const frames = [...state.currentProject.frames];
       const frameCode = frames[frameIndex];
-      // Defensive coding in case layer data is missing
       if (!frameCode.layers[state.activeLayerId]) {
          frameCode.layers[state.activeLayerId] = createGrid(state.currentProject.width, state.currentProject.height);
       }
 
       const layerGrid = frameCode.layers[state.activeLayerId].map(row => [...row]);
       layerGrid[y][x] = color;
+      
+      const updatedFrame = {
+        ...frameCode,
+        layers: {
+          ...frameCode.layers,
+          [state.activeLayerId]: layerGrid
+        }
+      };
+      
+      frames[frameIndex] = updatedFrame;
+      return { currentProject: { ...state.currentProject, frames } };
+    }),
+
+  updatePixels: (frameIndex, updates) =>
+    set((state) => {
+      if (!state.currentProject || !state.activeLayerId) return state;
+      
+      const layer = state.currentProject.layers.find(l => l.id === state.activeLayerId);
+      if (layer?.locked || !layer?.visible) return state;
+
+      const frames = [...state.currentProject.frames];
+      const frameCode = frames[frameIndex];
+      if (!frameCode.layers[state.activeLayerId]) {
+         frameCode.layers[state.activeLayerId] = createGrid(state.currentProject.width, state.currentProject.height);
+      }
+
+      const layerGrid = frameCode.layers[state.activeLayerId].map(row => [...row]);
+      
+      updates.forEach(({x, y, color}) => {
+         if (layerGrid[y] && layerGrid[y][x] !== undefined) {
+             layerGrid[y][x] = color;
+         }
+      });
       
       const updatedFrame = {
         ...frameCode,

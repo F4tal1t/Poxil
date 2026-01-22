@@ -16,7 +16,9 @@ export default function TopToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, mou
   const { 
     selectedTool, 
     mirrorX, toggleMirrorX,
-    mirrorY, toggleMirrorY
+    mirrorY, toggleMirrorY,
+    tileMode, toggleTileMode,
+    tileLayout, setTileLayout
   } = useEditorStore();
   
   return (
@@ -57,6 +59,31 @@ export default function TopToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, mou
             />
             Mirror Y
           </label>
+          <div className="h-4 w-px bg-[#2a2630] mx-2"></div>
+          <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors select-none">
+            <input 
+              type="checkbox" 
+              checked={tileMode}
+              onChange={toggleTileMode}
+              className="rounded bg-[#2a2630] border-gray-600 focus:ring-blue-500 text-blue-500 w-3.5 h-3.5 cursor-pointer"
+            />
+            Tile Mode
+          </label>
+          
+          {tileMode && (
+            <select 
+              className="bg-[#2a2630] border border-[#2a2630] rounded px-1 py-0.5 text-[10px] outline-none focus:border-blue-500 ml-2 cursor-pointer"
+              value={`${tileLayout?.x || 3}x${tileLayout?.y || 3}`}
+              onChange={(e) => {
+                const [x, y] = e.target.value.split('x').map(Number);
+                setTileLayout({ x, y });
+              }}
+            >
+              <option value="3x3">3x3</option>
+              <option value="3x1">3x1</option>
+              <option value="1x3">1x3</option>
+            </select>
+          )}
         </div>
       </div>
 

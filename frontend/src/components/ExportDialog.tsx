@@ -4,11 +4,12 @@ import { Project } from "../types";
 interface ExportDialogProps {
   project: Project | null;
   onClose: () => void;
-  onExport: (scale: number) => void;
+  onExport: (scale: number, format: 'png' | 'gif') => void;
 }
 
 export default function ExportDialog({ project, onClose, onExport }: ExportDialogProps) {
   const [scale, setScale] = useState(1);
+  const [format, setFormat] = useState<'png' | 'gif'>('png');
 
   if (!project) return null;
 
@@ -20,9 +21,25 @@ export default function ExportDialog({ project, onClose, onExport }: ExportDialo
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
       <div className="bg-gray-800 text-white rounded-lg p-6 max-w-sm w-full border border-gray-700 shadow-xl">
-        <h2 className="text-xl font-bold mb-4">Export Image</h2>
+        <h2 className="text-xl font-bold mb-4">Export</h2>
         
         <div className="space-y-6">
+          {/* Format Selection */}
+           <div className="flex bg-gray-900 rounded p-1">
+              <button 
+                onClick={() => setFormat('png')}
+                className={`flex-1 py-1.5 text-xs font-bold uppercase rounded transition ${format === 'png' ? 'bg-gray-700 text-white shadow' : 'text-gray-500 hover:text-white'}`}
+              >
+                  Image (PNG)
+              </button>
+              <button 
+                onClick={() => setFormat('gif')}
+                className={`flex-1 py-1.5 text-xs font-bold uppercase rounded transition ${format === 'gif' ? 'bg-gray-700 text-white shadow' : 'text-gray-500 hover:text-white'}`}
+              >
+                  Animation (GIF)
+              </button>
+           </div>
+
           {/* Resolution Info */}
           <div className="bg-gray-900/50 p-4 rounded-lg flex flex-col gap-2">
             <div className="flex justify-between text-sm text-gray-400">
@@ -68,10 +85,10 @@ export default function ExportDialog({ project, onClose, onExport }: ExportDialo
               Cancel
             </button>
             <button
-              onClick={() => onExport(scale)}
+              onClick={() => onExport(scale, format)}
               className="flex-1 px-4 py-2 bg-[#df4c16] hover:bg-[#E95620] text-white rounded text-sm font-semibold transition shadow-md"
             >
-              Export PNG
+              Export {format.toUpperCase()}
             </button>
           </div>
         </div>

@@ -7,6 +7,53 @@ interface RightSidebarProps {
   className?: string;
 }
 
+const LayerPreview = ({ grid, width, height }: { grid: string[][] | undefined, width: number, height: number }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw checkerboard background for transparency
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#333';
+    const checkSize = 4;
+    for(let y=0; y<canvas.height; y+=checkSize) {
+        for(let x=0; x<canvas.width; x+=checkSize) {
+            if(((x/checkSize) + (y/checkSize)) % 2 === 0) ctx.fillRect(x,y,checkSize,checkSize);
+        }
+    }
+
+    if (!grid) return;
+    
+    const scaleX = canvas.width / width;
+    const scaleY = canvas.height / height;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Center it
+    const offsetX = (canvas.width - width * scale) / 2;
+    const offsetY = (canvas.height - height * scale) / 2;
+
+    for (let y = 0; y < height; y++) {
+      if (!grid[y]) continue;
+      for (let x = 0; x < width; x++) {
+        const color = grid[y][x];
+        if (color && color !== 'transparent') {
+          ctx.fillStyle = color;
+          ctx.fillRect(offsetX + x * scale, offsetY + y * scale, scale, scale);
+        }
+      }
+    }
+  }, [grid, width, height]);
+
+  return <canvas ref={canvasRef} width={32} height={32} className="w-8 h-8 flex-shrink-0 border border-gray-600 rounded bg-[#1a1a1a]" />;
+};
+
 export default function RightSidebar({ className = "" }: RightSidebarProps) {
   const { 
     currentProject, 
@@ -17,11 +64,27 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
     deleteLayer,
     toggleLayerVisibility,
     toggleLayerLock,
-    updateLayerOpacity
+    updateLayerOpacity,
+    renameLayer
   } = useEditorStore();
   
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const startEditing = (id: string, currentName: string) => {
+    setEditingLayerId(id);
+    setEditName(currentName);
+  };
+
+  const saveLayerName = () => {
+    if (editingLayerId && editName.trim()) {
+      renameLayer(editingLayerId, editName.trim());
+    }
+    setEditingLayerId(null);
+  };
+
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,7 +97,7 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
     }
   };
 
-  // Preview rendering logic
+  // Preview rendering logic (Main Preview)
   useEffect(() => {
     const canvas = previewCanvasRef.current;
     if (!canvas || !currentProject) return;
@@ -69,8 +132,6 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
     const frame = currentProject.frames[currentFrame];
     if (!frame || !frame.layers) return;
 
-    // Layers are stored Top->Bottom in array (index 0 is top)
-    // So we render reverse: length-1 -> 0 to composite correctly
     const layers = currentProject.layers || [];
     [...layers].reverse().forEach(layer => {
         if (!layer.visible) return;
@@ -105,11 +166,52 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
   }, [currentProject, currentFrame, currentProject?.layers, currentProject?.frames]);
 
   const activeLayer = currentProject?.layers.find(l => l.id === activeLayerId);
+  const [activeTab, setActiveTab] = useState("all"); 
+
+  const scrollToSection = (id: string) => {
+      const element = document.getElementById(id);
+      if(element) element.scrollIntoView({ behavior: 'smooth' });
+      setActiveTab(id);
+  };
 
   return (
-    <div className={`bg-[#1f1c21] border-l border-[#2a2630] flex flex-col h-full overflow-y-auto ${className}`}>
-      {/* 1. Preview Module */}
-      <div className="p-4 border-b border-[#2a2630]">
+    <div className={`flex h-full ${className}`}>
+      
+      {/* VERTICAL SIDE MENU */}
+      <div className="w-8 flex flex-col items-center bg-[#151316] border-b border-[#2a2630] h-fit text-[10px] font-bold text-gray-400 py-2 gap-4 select-none">
+          <div 
+             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
+             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+             onClick={() => scrollToSection('section-preview')}
+          >
+             Preview
+          </div>
+          <div 
+             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
+             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+             onClick={() => scrollToSection('section-layers')}
+          >
+             Layer
+          </div>
+           <div 
+             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
+             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+             onClick={() => scrollToSection('section-colors')}
+          >
+             Colors
+          </div>
+           <div 
+             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
+             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+             onClick={() => scrollToSection('section-reference')}
+          >
+             Reference
+          </div>
+      </div>
+
+      <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#1f1c21] border-l border-[#2a2630]">
+        {/* 1. Preview Module */}
+        <div id="section-preview" className="p-4 border-b border-[#2a2630]">
         <h3 className="text-xs font-bold text-[#8c8796] mb-2 uppercase tracking-wider">Preview</h3>
         <div className="bg-[#151316] rounded-lg p-2 flex items-center justify-center border border-[#2a2630] shadow-inner">
            <canvas 
@@ -122,7 +224,7 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
       </div>
 
       {/* Reference Module */}
-      <div className="p-4 border-b border-[#2a2630]">
+      <div id="section-reference" className="p-4 border-b border-[#2a2630]">
         <h3 className="text-xs font-bold text-[#8c8796] mb-2 uppercase tracking-wider">Reference</h3>
         <div className="bg-[#151316] rounded-lg p-2 min-h-[100px] border border-[#2a2630] flex flex-col items-center justify-center relative overflow-hidden group">
             {referenceImage ? (
@@ -143,7 +245,7 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
       </div>
 
       {/* 2. Layers Module (Above Colors) */}
-      <div className="flex-1 border-b border-[#2a2630] p-4 flex flex-col min-h-[200px]">
+      <div id="section-layers" className="flex-1 border-b border-[#2a2630] p-4 flex flex-col min-h-[280px]">
          <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-bold text-[#8c8796] uppercase tracking-wider">Layers</h3>
             <button 
@@ -165,31 +267,66 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
                      ? 'bg-[#df4c16]/20 border-[#df4c16]/50' 
                      : 'hover:bg-[#2a2630] border-transparent'
                  }`}
-               >
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleLayerVisibility(layer.id); }}
-                    className={`hover:text-white ${layer.visible ? 'text-gray-400' : 'text-gray-600'}`}
-                  >
-                    {layer.visible ? <EyeOpen size={14} /> : <EyeSlashed size={14} />}
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleLayerLock(layer.id); }}
-                    className={`hover:text-white ${layer.locked ? 'text-red-400' : 'text-gray-600'}`}
-                  >
-                    {layer.locked ? <LockOn size={14} /> : <LockOff size={14} />}
-                  </button>
+               > 
+                  <LayerPreview 
+                      grid={currentProject.frames[currentFrame]?.layers[layer.id]} 
+                      width={currentProject.width} 
+                      height={currentProject.height} 
+                  />
+
+                  <div className="flex flex-col flex-1 min-w-0">
+                      {editingLayerId === layer.id ? (
+                        <input
+                          type="text"
+                          value={editName}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onBlur={saveLayerName}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveLayerName();
+                            if (e.key === 'Escape') setEditingLayerId(null);
+                          }}
+                          className="text-xs bg-[#0f0e10] text-white border border-blue-500 rounded px-1 py-0.5 w-full outline-none"
+                        />
+                      ) : (
+                        <span 
+                          className={`text-xs font-medium truncate ${
+                            activeLayerId === layer.id ? 'text-white' : 'text-gray-400'
+                          }`}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            startEditing(layer.id, layer.name);
+                          }}
+                        >
+                          {layer.name}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-gray-400">
+                        {layer.opacity}% • {layer.visible ? 'Vis' : 'Hid'}
+                      </span>
+                  </div>
                   
-                  <span className={`flex-1 text-xs font-medium truncate ${
-                    activeLayerId === layer.id ? 'text-white' : 'text-gray-400'
-                  }`}>
-                    {layer.name}
-                  </span>
+                  <div className="flex flex-col gap-1 items-end">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); toggleLayerVisibility(layer.id); }}
+                        className={`hover:text-white ${layer.visible ? 'text-gray-400' : 'text-gray-200'}`}
+                    >
+                        {layer.visible ? <EyeOpen size={12} /> : <EyeSlashed size={12} />}
+                    </button>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); toggleLayerLock(layer.id); }}
+                        className={`hover:text-white ${layer.locked ? 'text-red-400' : 'text-gray-200'}`}
+                    >
+                        {layer.locked ? <LockOn size={12} /> : <LockOff size={12} />}
+                    </button>
+                  </div>
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); deleteLayer(layer.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition"
+                    className="text-gray-200 hover:text-red-500 transition ml-1"
                   >
-                    <TrashBin size={14} />
+                    <TrashBin size={12} />
                   </button>
                </div>
              ))}
@@ -221,9 +358,10 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
       </div>
 
       {/* 3. Color Palette (Zero padding, No rounded corners) */}
-      <div className="">
+      <div id="section-colors" className="">
         <ColorPalette className="!border-l-0 !p-0 !h-auto" />
       </div>
     </div>
+  </div>
   );
 }

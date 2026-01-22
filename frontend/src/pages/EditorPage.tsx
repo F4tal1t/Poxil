@@ -128,7 +128,7 @@ export default function EditorPage() {
             />
           </div>
 
-          <RightSidebar className="w-72 flex-shrink-0" />
+          <RightSidebar className="w-80 flex-shrink-0" />
         </main>
 
         <Timeline />

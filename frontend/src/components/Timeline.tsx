@@ -87,12 +87,13 @@ export default function Timeline({ className = "" }: TimelineProps) {
 
             <button
                onClick={toggleOnionSkin}
-               className={`p-1.5 rounded transition-colors ${
+               className={`flex items-center gap-2 p-1.5 rounded transition-colors ${
                    showOnionSkin ? "bg-[#3d3842] text-white" : "hover:bg-[#3d3842] text-gray-400"
                }`}
                title="Toggle Onion Skin"
             >
                {showOnionSkin ? <EyeOpen size={14} /> : <EyeSlashed size={14} />}
+               <span className="text-[10px] font-bold uppercase hidden sm:inline">Onion Skin</span>
             </button>
         </div>
 

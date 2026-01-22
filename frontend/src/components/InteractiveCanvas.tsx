@@ -104,10 +104,14 @@ export default function InteractiveCanvas({
     secondaryColor, 
     currentProject,
     updatePixel,
+    updatePixels,
     setCurrentProject,
     mirrorX,
     mirrorY,
-    showOnionSkin
+    tileMode,
+    tileLayout,
+    showOnionSkin,
+    pushToHistory
   } = useEditorStore();
 
   // Render canvas
@@ -121,82 +125,86 @@ export default function InteractiveCanvas({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw background (checkers)
-    const checkSize = pixelSize; // Or smaller
-    // Fill white
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Draw grid lines or checkers if needed, but for now transparent is transparent
-    
-    // Draw pixels if project exists
-    if (currentProject) {
-      const frame = currentProject.frames[currentFrame];
-      const layers = currentProject.layers || [];
-      
-      // ONION SKIN RENDER (Previous Frame)
-      if (showOnionSkin && currentFrame > 0) {
-        const prevFrame = currentProject.frames[currentFrame - 1];
-        if (prevFrame) {
-            // Render visible layers of prev frame at low opacity
-             [...layers].reverse().forEach(layer => {
+    const renderTile = (offsetX: number, offsetY: number) => {
+        // Draw background (checkers)
+        const checkSize = pixelSize;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
+
+        // Draw active pixel content
+        if (currentProject) {
+            const frame = currentProject.frames[currentFrame];
+            const layers = currentProject.layers || [];
+            
+            [...layers].reverse().forEach(layer => {
                 if (!layer.visible) return;
-                const grid = prevFrame.layers[layer.id];
-                 if (!grid) return;
-                 
-                 ctx.globalAlpha = 0.3; // Onion skin fixed opacity
-                 
-                 for (let y = 0; y < height; y++) {
-                    for (let x = 0; x < width; x++) {
-                        const color = grid[y]?.[x] || "transparent";
-                        if (color !== "transparent") {
+                const grid = frame?.layers[layer.id];
+                if (!grid) return;
+                
+                ctx.globalAlpha = layer.opacity / 100;
+                
+                for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const color = grid[y]?.[x] || "transparent";
+                    if (color !== "transparent") {
                         ctx.fillStyle = color;
-                        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-                        }
+                        ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
                     }
                 }
-             });
-             ctx.globalAlpha = 1.0;
+                }
+                ctx.globalAlpha = 1.0;
+            });
         }
-      }
 
-      // Render from Bottom to Top
-      [...layers].reverse().forEach(layer => {
-        if (!layer.visible) return;
-        const grid = frame?.layers[layer.id];
-        if (!grid) return;
+        // Draw grid
+        ctx.strokeStyle = "rgba(0,0,0, 0.1)"; 
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= width; x++) {
+            ctx.beginPath();
+            ctx.moveTo(offsetX + x * pixelSize, offsetY + 0);
+            ctx.lineTo(offsetX + x * pixelSize, offsetY + height * pixelSize);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= height; y++) {
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 0, offsetY + y * pixelSize);
+            ctx.lineTo(offsetX + width * pixelSize, offsetY + y * pixelSize);
+            ctx.stroke();
+        }
+    };
+
+    if (tileMode) {
+        ctx.save();
+        ctx.scale(1, 1); // Reset any context scaling if managed externally (it's not here)
         
-        ctx.globalAlpha = layer.opacity / 100;
-        
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            const color = grid[y]?.[x] || "transparent";
-            if (color !== "transparent") {
-              ctx.fillStyle = color;
-              ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        // Use layout from store (default handled there or here)
+        const cols = tileLayout?.x || 3;
+        const rows = tileLayout?.y || 3;
+
+        // Render from 0 to cols-1 and 0 to rows-1 (Top-Left alignment)
+        for (let ix = 0; ix < cols; ix++) {
+            for (let iy = 0; iy < rows; iy++) {
+                 if (ix === 0 && iy === 0) {
+                     // Main tile (Active) i.e. Leftmost-Topmost
+                     renderTile(0, 0);
+                 } else {
+                     // Ghost tiles
+                     ctx.globalAlpha = 0.5;
+                     renderTile(ix * width * pixelSize, iy * height * pixelSize);
+                     ctx.globalAlpha = 1.0;
+                 }
             }
-          }
         }
-        ctx.globalAlpha = 1.0;
-      });
+        
+        ctx.restore();
+    } else {
+        renderTile(0, 0);
     }
-
-    // Draw grid
-    ctx.strokeStyle = "rgba(0,0,0, 0.1)"; 
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= width; x++) {
-      ctx.beginPath();
-      ctx.moveTo(x * pixelSize, 0);
-      ctx.lineTo(x * pixelSize, height * pixelSize);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= height; y++) {
-      ctx.beginPath();
-      ctx.moveTo(0, y * pixelSize);
-      ctx.lineTo(width * pixelSize, y * pixelSize);
-      ctx.stroke();
-    }
-
+    
+    // Onion skin logic remains separate for now, only applied to main tile usually
+    
     // Draw active selection
+
     if (selection) {
       const minX = Math.min(selection.start.x, selection.end.x);
       const minY = Math.min(selection.start.y, selection.end.y);
@@ -282,8 +290,16 @@ export default function InteractiveCanvas({
     const logicalY = mouseY / zoom;
     
     // Convert to pixel coordinates
-    const x = Math.floor(logicalX / pixelSize);
-    const y = Math.floor(logicalY / pixelSize);
+    let x = Math.floor(logicalX / pixelSize);
+    let y = Math.floor(logicalY / pixelSize);
+
+    // If tile mode is on, we map clicks on extended area back to original coordinates
+    if (tileMode) {
+        // Simple modulo for Top-Left alignment
+        // x and y are positive relative to the big canvas
+        x = x % width;
+        y = y % height;
+    }
 
     if (x >= 0 && x < width && y >= 0 && y < height) {
       return { x, y };
@@ -294,14 +310,11 @@ export default function InteractiveCanvas({
   // Batch draw pixels
   const drawPixels = useCallback((points: { x: number; y: number; color: string }[]) => {
     if (currentProject) {
-      // NOTE: Ideally we would have a batch update in the store to avoid multiple re-renders
-      points.forEach(({ x, y, color }) => {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-          updatePixel(currentFrame, x, y, color);
-        }
-      });
+      if (points.length === 0) return;
+      // Use batch update to prevent lag
+      updatePixels(currentFrame, points.filter(p => p.x >= 0 && p.x < width && p.y >= 0 && p.y < height));
     }
-  }, [width, height, currentProject, currentFrame, updatePixel]);
+  }, [width, height, currentProject, currentFrame, updatePixels]);
 
   // Draw with brush size (square brush) and mirror support
   const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {
@@ -382,6 +395,11 @@ export default function InteractiveCanvas({
     setStartPos(coords); // Track start position for shapes
     
     const color = e.button === 2 ? secondaryColor : primaryColor;
+
+    // Save history before modifying canvas
+    if (["pencil", "eraser", "fill", "text", "line", "rectangle", "circle"].includes(selectedTool.type)) {
+      pushToHistory();
+    }
     
     switch (selectedTool.type) {
       case "text":
@@ -593,9 +611,9 @@ export default function InteractiveCanvas({
     >
       <canvas
         ref={canvasRef}
-        width={width * pixelSize}
-        height={height * pixelSize}
-        className="border-2 border-gray-600 shadow-lg cursor-none"
+        width={tileMode ? width * pixelSize * (tileLayout?.x || 3) : width * pixelSize}
+        height={tileMode ? height * pixelSize * (tileLayout?.y || 3) : height * pixelSize}
+        className="border-2 border-gray-600 shadow-lg cursor-none bg-[#333]"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
