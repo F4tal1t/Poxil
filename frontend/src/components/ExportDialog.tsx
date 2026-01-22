@@ -4,12 +4,12 @@ import { Project } from "../types";
 interface ExportDialogProps {
   project: Project | null;
   onClose: () => void;
-  onExport: (scale: number, format: 'png' | 'gif') => void;
+  onExport: (scale: number, format: 'png' | 'gif' | 'svg') => void;
 }
 
 export default function ExportDialog({ project, onClose, onExport }: ExportDialogProps) {
   const [scale, setScale] = useState(1);
-  const [format, setFormat] = useState<'png' | 'gif'>('png');
+  const [format, setFormat] = useState<'png' | 'gif' | 'svg'>('png');
 
   if (!project) return null;
 
@@ -37,6 +37,12 @@ export default function ExportDialog({ project, onClose, onExport }: ExportDialo
                 className={`flex-1 py-1.5 text-xs font-bold uppercase rounded transition ${format === 'gif' ? 'bg-gray-700 text-white shadow' : 'text-gray-500 hover:text-white'}`}
               >
                   Animation (GIF)
+              </button>
+              <button 
+                onClick={() => setFormat('svg')}
+                className={`flex-1 py-1.5 text-xs font-bold uppercase rounded transition ${format === 'svg' ? 'bg-gray-700 text-white shadow' : 'text-gray-500 hover:text-white'}`}
+              >
+                  Vector (SVG)
               </button>
            </div>
 

@@ -133,6 +133,25 @@ export default function InteractiveCanvas({
 
         // Draw active pixel content
         if (currentProject) {
+            // Onion Skin (Previous Frame - Active Layer)
+            if (showOnionSkin && activeLayerId && currentFrame > 0) {
+                const prevFrame = currentProject.frames[currentFrame - 1];
+                const prevGrid = prevFrame?.layers[activeLayerId];
+                if (prevGrid) {
+                    ctx.globalAlpha = 0.3;
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const color = prevGrid[y]?.[x];
+                            if (color && color !== "transparent") {
+                                ctx.fillStyle = color;
+                                ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
+                            }
+                        }
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
             const frame = currentProject.frames[currentFrame];
             const layers = currentProject.layers || [];
             

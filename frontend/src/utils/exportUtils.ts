@@ -16,9 +16,8 @@ const renderFrameToDataUrl = (project: Project, frameIndex: number, scale: numbe
   const frame = project.frames[frameIndex];
   const layers = project.layers || [];
 
-  // Background
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Background (Transparent)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw layers
   [...layers].reverse().forEach(layer => {
@@ -41,6 +40,57 @@ const renderFrameToDataUrl = (project: Project, frameIndex: number, scale: numbe
   });
 
   return canvas.toDataURL("image/png");
+};
+
+
+export const exportProjectAsSvg = (project: Project | null, scale: number = 1) => {
+    if (!project) return;
+    
+    const width = project.width;
+    const height = project.height;
+    
+    // Start SVG string
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}" shape-rendering="crispEdges">`;
+    
+    // Render Frame 0 Layers
+    const frame = project.frames[0];
+    const layers = project.layers || [];
+    
+    [...layers].reverse().forEach(layer => {
+        if (!layer.visible) return;
+        const grid = frame.layers[layer.id];
+        if (!grid) return;
+
+        // Group for layer opacity
+        if (layer.opacity < 100) {
+            svgContent += `<g opacity="${layer.opacity / 100}">`;
+        }
+
+        grid.forEach((row, y) => {
+            row.forEach((color, x) => {
+                if (color && color !== "transparent") {
+                    svgContent += `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}" />`;
+                }
+            });
+        });
+
+        if (layer.opacity < 100) {
+            svgContent += `</g>`;
+        }
+    });
+    
+    svgContent += `</svg>`;
+    
+    const blob = new Blob([svgContent], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.download = `${project.name || "untitled"}.svg`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
 
 export const exportProjectAsImage = (project: Project | null, scale: number = 1) => {

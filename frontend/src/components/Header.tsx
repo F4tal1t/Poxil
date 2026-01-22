@@ -3,7 +3,7 @@ import { ArrowBack, ArrowForward, Download, Save, SettingsHorizontal } from "aka
 import { Link } from "react-router-dom";
 import MenuDropdown from "./MenuDropdown";
 import { useEditorStore } from "../lib/store";
-import { exportProjectAsImage, exportProjectAsGif } from "../utils/exportUtils";
+import { exportProjectAsImage, exportProjectAsGif, exportProjectAsSvg } from "../utils/exportUtils";
 import ExportDialog from "./ExportDialog"; // We will repurpose this or use simple window.confirm
 
 interface HeaderProps {
@@ -39,9 +39,11 @@ export default function Header({ onNewFile }: HeaderProps) {
     setShowExportDialog(true);
   };
 
-  const handleExportConfirm = (scale: number, format: 'png' | 'gif') => {
+  const handleExportConfirm = (scale: number, format: 'png' | 'gif' | 'svg') => {
     if (format === 'png') {
         exportProjectAsImage(currentProject, scale);
+    } else if (format === 'svg') {
+        exportProjectAsSvg(currentProject, scale);
     } else {
         exportProjectAsGif(currentProject, scale, 12); // Default FPS 12 for now
     }
