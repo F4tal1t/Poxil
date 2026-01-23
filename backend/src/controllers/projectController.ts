@@ -62,12 +62,12 @@ export const getProject = async (req: AuthRequest, res: Response) => {
 export const updateProject = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    // console.log(`Updating project ${id} with body:`, JSON.stringify(req.body, null, 2)); // Debug log removed
-    const { name, description, frames, layers, isPublic } = req.body;
+    console.log(`Updating project ${id}. Width: ${req.body.width}, Height: ${req.body.height}`); // Debug log
+    const { name, description, width, height, frames, layers, isPublic } = req.body;
 
     const project = await prisma.project.updateMany({
       where: { id, userId: req.user!.id },
-      data: { name, description, frames, layers, isPublic },
+      data: { name, description, width, height, frames, layers, isPublic },
     });
 
     if (project.count === 0) {

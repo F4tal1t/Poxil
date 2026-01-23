@@ -115,8 +115,11 @@ export default function Header({ onNewFile }: HeaderProps) {
       if (currentProject.id && currentProject.id !== "temp-project") {
         await axios.put(`/api/projects/${currentProject.id}`, {
           name: projectName,
-          description: currentProject.description || undefined, // Ensure we don't send null to avoid validation issues
+          description: currentProject.description || undefined,
+          width: currentProject.width,   // Save current width
+          height: currentProject.height, // Save current height
           frames: currentProject.frames,
+          layers: currentProject.layers,
           isPublic: currentProject.isPublic
         });
       } else {
@@ -279,14 +282,6 @@ export default function Header({ onNewFile }: HeaderProps) {
        </div>
 
        <div className="flex items-center gap-2">
-          <button 
-             onClick={handleSaveClick}
-             className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#3d3842] rounded text-gray-300 transition text-xs font-bold uppercase"
-             title="Save Project"
-          >
-             <Save size={14} />
-             <span className="hidden sm:inline">Save</span>
-          </button>
 
           <button 
              onClick={handleExportClick}

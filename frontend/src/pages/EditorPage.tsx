@@ -48,8 +48,8 @@ export default function EditorPage() {
         }
       }
 
-      // Polyfill layers if missing (legacy projects)
-      if (!projectData.layers && projectData.frames && projectData.frames.length > 0) {
+      // Polyfill layers if missing (legacy projects) or empty
+      if ((!projectData.layers || projectData.layers.length === 0) && projectData.frames && projectData.frames.length > 0) {
            const firstFrameLayers = projectData.frames[0].layers; 
            const layerIds = firstFrameLayers ? Object.keys(firstFrameLayers) : ["layer-1"];
            projectData.layers = layerIds.map((id: string, index: number) => ({

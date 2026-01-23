@@ -5,6 +5,8 @@ import { Project } from "../types";
 import axios from "axios";
 import { Plus, SignOut, Image, Search, TrashBin } from "akar-icons";
 import ConfirmDialog from "../components/ConfirmDialog";
+import CanvasSizeDialog from "../components/CanvasSizeDialog";
+import ProjectThumbnail from "../components/ProjectThumbnail";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -12,11 +14,11 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
-  // Dialog State
-  const [deleteData, setDeleteData] = useState<{ isOpen: boolean, projectId: string | null }>({
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean, config: any}>({
     isOpen: false,
-    projectId: null
+    config: {}
   });
 
   useEffect(() => {
@@ -34,12 +36,12 @@ export default function DashboardPage() {
     }
   };
 
-  const createProject = async () => {
+  const handleCreateProject = async (width: number, height: number) => {
     try {
       const res = await axios.post("/api/projects", {
         name: "New Project",
-        width: 32,
-        height: 32,
+        width, // Use custom width
+        height, // Use custom height
       });
       navigate(`/editor/${res.data.id}`);
     } catch (error) {
@@ -47,25 +49,31 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, projectId: string) => {
-    e.stopPropagation();
-    setDeleteData({ isOpen: true, projectId });
+  const createProjectClick = () => {
+    setShowCreateDialog(true);
   };
 
-  const activeDeleteProject = projects.find(p => p.id === deleteData.projectId);
-
-  const confirmDelete = async () => {
-    if (!deleteData.projectId) return;
-
-    try {
-      await axios.delete(`/api/projects/${deleteData.projectId}`);
-      setProjects(projects.filter(p => p.id !== deleteData.projectId));
-    } catch (error) {
-      console.error("Failed to delete project", error);
-      alert("Failed to delete project");
-    } finally {
-      setDeleteData({ isOpen: false, projectId: null });
-    }
+  const handleDeleteClick = (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation();
+    setConfirmDialog({
+        isOpen: true,
+        config: {
+            title: "Delete Project",
+            message: "Are you sure you want to delete this project? This action cannot be undone.",
+            confirmText: "Delete",
+            isDangerous: true,
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`/api/projects/${projectId}`);
+                    setProjects(prev => prev.filter(p => p.id !== projectId));
+                } catch (error) {
+                    console.error("Failed to delete project", error);
+                } finally {
+                    setConfirmDialog({ isOpen: false, config: {} });
+                }
+            }
+        }
+    });
   };
 
   const filteredProjects = projects.filter(p => 
@@ -74,14 +82,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#151316] text-[#cecece] font-primary">
+      {showCreateDialog && <CanvasSizeDialog onConfirm={handleCreateProject} />}
+
       <ConfirmDialog 
-        isOpen={deleteData.isOpen}
-        title="Delete Project?"
-        message={`Are you sure you want to delete "${activeDeleteProject?.name || 'this project'}"? This action cannot be undone.`}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteData({ isOpen: false, projectId: null })}
-        confirmText="Delete"
-        isDangerous={true}
+        isOpen={confirmDialog.isOpen}
+        {...confirmDialog.config}
+        onCancel={() => setConfirmDialog({ isOpen: false, config: {} })}
       />
       
       {/* Header */}
@@ -127,7 +133,7 @@ export default function DashboardPage() {
                />
             </div>
             <button
-              onClick={createProject}
+              onClick={createProjectClick}
               className="flex items-center gap-2 px-4 py-2 bg-[#df4c16] hover:bg-[#c94514] text-white rounded-lg font-primary text-sm transition-colors shadow-lg shadow-[#df4c16]/20 whitespace-nowrap"
             >
               <Plus size={16} />
@@ -147,7 +153,7 @@ export default function DashboardPage() {
              <h3 className="text-lg font-primary text-white mb-2">No projects found</h3>
              <p className="text-gray-500 text-sm mb-6">Get started by creating your first masterpiece!</p>
              <button
-              onClick={createProject}
+              onClick={createProjectClick}
               className="px-4 py-2 bg-[#2a2630] hover:bg-[#35303c] text-white rounded font-primary text-sm transition-colors border border-[#3e3846]"
             >
               Create Project
@@ -170,10 +176,12 @@ export default function DashboardPage() {
                     <TrashBin size={16} />
                 </button>
 
-                {/* Preview Placeholder - In real app, render a thumbnail */}
-                <div className="flex-1 bg-[#252228] pattern-checkers flex items-center justify-center relative overflow-hidden">
+                {/* Preview Placeholder - Render Thumbnail */}
+                <div className="flex-1 bg-[#252228] pattern-checkers flex items-center justify-center relative overflow-hidden p-4">
                     <div className="absolute inset-0 opacity-10 pattern-grid pointer-events-none"></div>
-                    <div className="w-16 h-16 bg-[#df4c16] shadow-lg shadow-[#df4c16]/20 rounded opacity-20 group-hover:opacity-40 transition-opacity transform group-hover:scale-110 duration-300"></div>
+                    <div className="w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <ProjectThumbnail project={project} />
+                    </div>
                 </div>
                 
                 <div className="p-4 bg-[#1f1c21] border-t border-[#2a2630] group-hover:bg-[#252128] transition-colors">

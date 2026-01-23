@@ -10,8 +10,8 @@ const createProjectSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(100),
     description: z.string().max(500).nullish(),
-    width: z.number().int().min(8).max(128).optional(),
-    height: z.number().int().min(8).max(128).optional(),
+    width: z.number().int().min(8).max(512).optional(),
+    height: z.number().int().min(8).max(512).optional(),
     frames: z.any().optional(), // Added support for initial frames
     layers: z.any().optional(), // Added support for initial layers
   }),
@@ -22,8 +22,10 @@ const updateProjectSchema = z.object({
     id: z.string(),
   }),
   body: z.object({
-    name: z.string().optional(), // Removed min/max length constraints for debugging
-    description: z.any().optional(), // Relaxed to z.any() to handle any input
+    name: z.string().optional(),
+    description: z.any().optional(),
+    width: z.number().int().min(8).max(512).optional(), // Added width
+    height: z.number().int().min(8).max(512).optional(), // Added height
     frames: z.any().optional(),
     layers: z.any().optional(),
     isPublic: z.boolean().optional(),

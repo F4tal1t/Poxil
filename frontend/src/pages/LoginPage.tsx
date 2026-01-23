@@ -48,7 +48,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden bg-gray-900 justify-center items-center">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop" 
+            src="/Banner.png" 
             alt="Pixel Art Background" 
             className="w-full h-full object-cover opacity-60"
           />

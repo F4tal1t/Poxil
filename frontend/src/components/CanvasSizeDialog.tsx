@@ -27,7 +27,7 @@ export default function CanvasSizeDialog({ onConfirm }: CanvasSizeDialogProps) {
               <input
                 type="number"
                 min="8"
-                max="256"
+                max="512"
                 value={width}
                 onChange={(e) => setWidth(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-700 rounded"
@@ -38,7 +38,7 @@ export default function CanvasSizeDialog({ onConfirm }: CanvasSizeDialogProps) {
               <input
                 type="number"
                 min="8"
-                max="256"
+                max="512"
                 value={height}
                 onChange={(e) => setHeight(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-700 rounded"
