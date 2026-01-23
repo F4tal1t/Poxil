@@ -4,7 +4,7 @@ import { prisma } from "../config/database.js";
 
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, width, height } = req.body;
+    const { name, description, width, height, frames, layers } = req.body;
     
     const project = await prisma.project.create({
       data: {
@@ -12,12 +12,15 @@ export const createProject = async (req: AuthRequest, res: Response) => {
         description,
         width: width || 32,
         height: height || 32,
+        frames: frames || [], // Save frames if provided
+        layers: layers || [], // Save layers if provided
         userId: req.user!.id,
       },
     });
 
     res.status(201).json(project);
   } catch (error) {
+    console.error("Create project error:", error); // Log detailed error
     res.status(500).json({ error: "Failed to create project" });
   }
 };
@@ -59,11 +62,12 @@ export const getProject = async (req: AuthRequest, res: Response) => {
 export const updateProject = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, frames, isPublic } = req.body;
+    // console.log(`Updating project ${id} with body:`, JSON.stringify(req.body, null, 2)); // Debug log removed
+    const { name, description, frames, layers, isPublic } = req.body;
 
     const project = await prisma.project.updateMany({
       where: { id, userId: req.user!.id },
-      data: { name, description, frames, isPublic },
+      data: { name, description, frames, layers, isPublic },
     });
 
     if (project.count === 0) {

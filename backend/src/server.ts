@@ -5,6 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import { toNodeHandler } from "better-auth/node";
 import { auth } from "./config/auth.js";
 import { logger } from "./config/logger.js";
 import { register, activeConnections, pixelUpdates } from "./config/metrics.js";
@@ -45,7 +46,7 @@ app.get("/metrics", async (req, res) => {
 });
 
 // Better-auth routes
-app.all("/api/auth/*", (req, res) => auth.handler(req, res));
+app.all("/api/auth/*", toNodeHandler(auth));
 
 // API routes
 app.use("/api/projects", projectRoutes);
@@ -57,6 +58,7 @@ app.get("/health", (req, res) => {
 
 // Socket.io for real-time collaboration
 io.on("connection", (socket) => {
+  // Trigger restart 2
   activeConnections.inc();
   logger.info(`Client connected: ${socket.id}`);
 

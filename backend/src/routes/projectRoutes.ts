@@ -9,9 +9,11 @@ const router = Router();
 const createProjectSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(100),
-    description: z.string().max(500).optional(),
+    description: z.string().max(500).nullish(),
     width: z.number().int().min(8).max(128).optional(),
     height: z.number().int().min(8).max(128).optional(),
+    frames: z.any().optional(), // Added support for initial frames
+    layers: z.any().optional(), // Added support for initial layers
   }),
 });
 
@@ -20,9 +22,10 @@ const updateProjectSchema = z.object({
     id: z.string(),
   }),
   body: z.object({
-    name: z.string().min(1).max(100).optional(),
-    description: z.string().max(500).optional(),
+    name: z.string().optional(), // Removed min/max length constraints for debugging
+    description: z.any().optional(), // Relaxed to z.any() to handle any input
     frames: z.any().optional(),
+    layers: z.any().optional(),
     isPublic: z.boolean().optional(),
   }),
 });

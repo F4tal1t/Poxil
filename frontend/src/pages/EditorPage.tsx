@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { useEditorStore } from "../lib/store";
 import Header from "../components/Header";
@@ -8,9 +8,11 @@ import ToolPalette from "../components/ToolPalette";
 import CanvasSizeDialog from "../components/CanvasSizeDialog";
 import InteractiveCanvas from "../components/InteractiveCanvas";
 import RightSidebar from "../components/RightSidebar";
+import axios from "axios";
 
 export default function EditorPage() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(true);
   const [canvasSize, setCanvasSize] = useState({ width: 32, height: 32 });
   const [zoom, setZoom] = useState(1);
@@ -18,9 +20,72 @@ export default function EditorPage() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(!!projectId);
   
-  const { setCurrentProject } = useEditorStore();
+  const { setCurrentProject, currentProject } = useEditorStore();
   const pixelSize = 16;
+
+  useEffect(() => {
+    if (projectId) {
+      setShowDialog(false); // Don't show new canvas dialog if loading existing project
+      fetchProject();
+    }
+  }, [projectId]);
+
+  const fetchProject = async () => {
+    try {
+      setIsLoading(true);
+      const res = await axios.get(`/api/projects/${projectId}`);
+      const projectData = res.data;
+      
+      // Ensure frames are properly parsed if they come as string
+      if (typeof projectData.frames === 'string') {
+        try {
+          projectData.frames = JSON.parse(projectData.frames);
+        } catch (e) {
+          console.error("Failed to parse frames", e);
+          projectData.frames = [];
+        }
+      }
+
+      // Polyfill layers if missing (legacy projects)
+      if (!projectData.layers && projectData.frames && projectData.frames.length > 0) {
+           const firstFrameLayers = projectData.frames[0].layers; 
+           const layerIds = firstFrameLayers ? Object.keys(firstFrameLayers) : ["layer-1"];
+           projectData.layers = layerIds.map((id: string, index: number) => ({
+               id,
+               name: `Layer ${index + 1}`,
+               visible: true,
+               locked: false,
+               opacity: 100
+           }));
+      }
+
+      // If frames are still empty or invalid, initialize defaults
+      if (!projectData.frames || projectData.frames.length === 0) {
+         const defaultLayerId = "layer-1";
+         projectData.frames = [{
+            id: "frame-1",
+            layers: {
+              [defaultLayerId]: Array(projectData.height).fill(null).map(() => Array(projectData.width).fill("transparent"))
+            },
+            duration: 100
+         }];
+         projectData.layers = [
+            { id: defaultLayerId, name: "Layer 1", visible: true, locked: false, opacity: 100 }
+         ];
+      }
+
+      setCanvasSize({ width: projectData.width, height: projectData.height });
+      setCurrentProject(projectData);
+    } catch (error) {
+      console.error("Failed to load project", error);
+      navigate("/dashboard"); // Redirect on error/unauthorized
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const handleCanvasCreate = (width: number, height: number) => {
     setCanvasSize({ width, height });
@@ -83,6 +148,14 @@ export default function EditorPage() {
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     setZoom((prev) => Math.max(0.1, Math.min(4, prev + delta)));
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#151316] text-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#df4c16]"></div>
+      </div>
+    );
+  }
 
   return (
     <>

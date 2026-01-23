@@ -165,7 +165,7 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
 
   }, [currentProject, currentFrame, currentProject?.layers, currentProject?.frames]);
 
-  const activeLayer = currentProject?.layers.find(l => l.id === activeLayerId);
+  const activeLayer = currentProject?.layers?.find(l => l.id === activeLayerId);
   const [activeTab, setActiveTab] = useState("all"); 
 
   const scrollToSection = (id: string) => {
