@@ -5,23 +5,26 @@ import { useEditorStore } from "../lib/store";
 // Custom SVG icons for tools
 const EraserIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-    <path d="M20 20L4 4L7 1L23 17L20 20Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M13 23L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <g clipPath="url(#clip0_eraser)">
+      <path d="M11.6066 6.53552L3.82843 14.3137C3.04738 15.0947 3.04738 16.3611 3.82843 17.1421L5.36396 18.6777C5.73904 19.0527 6.24774 19.2634 6.77818 19.2634H13.0208M11.6066 6.53552L13.7279 4.4142C14.509 3.63315 15.7753 3.63315 16.5564 4.4142L20.799 8.65684C21.58 9.43789 21.58 10.7042 20.799 11.4853L18.6777 13.6066M11.6066 6.53552L18.6777 13.6066M18.6777 13.6066L13.0208 19.2634M13.0208 19.2634H20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+    </g>
+    <defs>
+      <clipPath id="clip0_eraser">
+        <rect fill="white" height="24" width="24"/>
+      </clipPath>
+    </defs>
   </svg>
 );
 
 const ColorPickerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-    <path d="M12 2L14 4L4 14L2 12L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M20 10L22 12L12 22L10 20L20 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
+     <path d="M19.4 7.34L16.66 4.6A1.92 1.92 0 0 0 14 4.53l-2 2-1.29-1.24a1 1 0 0 0-1.42 1.42L10.53 8 5 13.53a2 2 0 0 0-.57 1.21L4 18.91a1 1 0 0 0 .29.8A1 1 0 0 0 5 20h.09l4.17-.38a2 2 0 0 0 1.21-.57l5.58-5.58 1.24 1.24a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42l-1.24-1.24 2-2a1.92 1.92 0 0 0-.07-2.71zm-13 7.6L12 9.36l2.69 2.7-2.79 2.79"/>
   </svg>
 );
 
 const FillBucketIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-    <path d="M3 14L3 21L10 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M20.5 7.5L16.5 3.5C16.1 3.1 15.6 3 15.2 3.3L8.3 10.2C8.1 10.4 8 10.6 8 10.9V13C8 13.6 8.4 14 9 14H11.1C11.4 14 11.6 13.9 11.8 13.7L18.7 6.8C19 6.4 19 5.9 18.6 5.5L18.5 5.4C18.1 5 17.6 5 17.2 5.4L10.3 12.3C10.1 12.5 9.9 12.6 9.6 12.6H7.5C6.7 12.6 6 11.9 6 11.1V9C6 8.7 6.1 8.5 6.3 8.3L13.2 1.4C13.6 1 13.6 0.5 13.2 0.1L13.1 0C12.7 -0.2 12.2 -0.2 11.8 0.2L4.9 7.1C4.7 7.3 4.6 7.5 4.6 7.8V9.9C4.6 10.7 5.3 11.4 6.1 11.4H8.2C8.5 11.4 8.7 11.3 8.9 11.1L15.8 4.2C16.2 3.8 16.7 3.8 17.1 4.2L21.1 8.2C21.5 8.6 21.5 9.1 21.1 9.5L14.2 16.4C14 16.6 13.8 16.7 13.5 16.7H11.4C10.6 16.7 9.9 16 9.9 15.2V13.1C9.9 12.8 10 12.6 10.2 12.4L17.1 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
+    <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1H18.07L11 6.03z"/>
   </svg>
 );
 

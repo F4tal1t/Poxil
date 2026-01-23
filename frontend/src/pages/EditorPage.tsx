@@ -57,7 +57,8 @@ export default function EditorPage() {
   const handleZoomReset = () => setZoom(1);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || e.button === 2 || e.shiftKey) {
+    // Determine panning: Middle mouse (button 1)
+    if (e.button === 1 || e.shiftKey) {
       e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
