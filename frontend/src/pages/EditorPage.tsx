@@ -152,7 +152,7 @@ export default function EditorPage() {
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#151316] text-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#df4c16]"></div>
+        <img src="/Loader.gif" alt="Loading..." className="h-16 w-16" />
       </div>
     );
   }

@@ -1,9 +1,9 @@
 import { Project } from "../types";
 // @ts-ignore
-import gifshot from "gifshot";
+import { GIFEncoder, quantize, applyPalette } from "gifenc";
 
 // Helper to render a specific frame to a data URL
-const renderFrameToDataUrl = (project: Project, frameIndex: number, scale: number): string | null => {
+const renderFrameToDataUrl = (project: Project, frameIndex: number, scale: number, backgroundColor: string | null = null): string | null => {
   const canvas = document.createElement("canvas");
   canvas.width = project.width * scale;
   canvas.height = project.height * scale;
@@ -16,8 +16,13 @@ const renderFrameToDataUrl = (project: Project, frameIndex: number, scale: numbe
   const frame = project.frames[frameIndex];
   const layers = project.layers || [];
 
-  // Background (Transparent)
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Background
+  if (backgroundColor) {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
   // Draw layers
   [...layers].reverse().forEach(layer => {
@@ -109,36 +114,77 @@ export const exportProjectAsImage = (project: Project | null, scale: number = 1)
 
 export const exportProjectAsGif = (project: Project | null, scale: number = 1, fps: number = 12) => {
     if (!project) return;
-
-    const images: string[] = [];
-    project.frames.forEach((_, index) => {
-        const url = renderFrameToDataUrl(project, index, scale);
-        if (url) images.push(url);
-    });
-
-    if (images.length === 0) return;
-
+    
+    // Create encoder
+    const gif = new GIFEncoder();
     const width = project.width * scale;
     const height = project.height * scale;
-
-    gifshot.createGIF({
-        images: images,
-        interval: 1 / fps,
-        gifWidth: width,
-        gifHeight: height,
-        numWorkers: 2,
-    }, (obj: any) => {
-        if (!obj.error) {
-            const image = obj.image;
-            const link = document.createElement("a");
-            link.download = `${project.name || "animation"}.gif`;
-            link.href = image;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else {
-            console.error("GIF Export failed:", obj.errorMsg);
-            alert("Failed to export GIF");
-        }
+    
+    project.frames.forEach((_, index) => {
+        // Render frame to canvas
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        
+        ctx.imageSmoothingEnabled = false;
+        
+        // Clear canvas (transparent)
+        ctx.clearRect(0, 0, width, height);
+        
+        const frame = project.frames[index];
+        const layers = project.layers || [];
+        
+        // Draw layers
+        [...layers].reverse().forEach(layer => {
+            if (!layer.visible) return;
+            const grid = frame.layers[layer.id];
+            if (!grid) return;
+            
+            ctx.globalAlpha = layer.opacity / 100;
+            grid.forEach((row, y) => {
+                row.forEach((color, x) => {
+                    if (color && color !== "transparent") {
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                    }
+                });
+            });
+            ctx.globalAlpha = 1.0;
+        });
+        
+        // Get raw data
+        const { data } = ctx.getImageData(0, 0, width, height);
+        
+        // Quantize colors and create palette
+        // Use rgba4444 to preserve alpha channel for transparency
+        const palette = quantize(data, 256, { format: 'rgba4444' });
+        const indexData = applyPalette(data, palette, 'rgba4444');
+        
+        // Write frame
+        gif.writeFrame(indexData, width, height, { 
+            palette, 
+            delay: 1000 / fps, 
+            transparent: true, 
+            dispose: 2 
+        });
     });
+
+    gif.finish();
+    
+    // Download
+    const buffer = gif.bytes(); 
+    const blob = new Blob([buffer], { type: 'image/gif' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.download = `${project.name || "animation"}.gif`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };

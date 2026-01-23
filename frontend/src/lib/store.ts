@@ -58,7 +58,37 @@ interface HistoryState {
   future: Project[];
 }
 
-export const useEditorStore = create<EditorState & HistoryState>((set, get) => ({
+export const useEditorStore = create<EditorState & HistoryState>((set, get) => {
+  // Try to load from localStorage
+  let savedState: Partial<EditorState> = {};
+  try {
+    const saved = localStorage.getItem("poxil-autosave-v2"); // Bumped version to invalidate old cache
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.currentProject) {
+        
+        let validActiveId = parsed.activeLayerId;
+        // Validate that the active layer actually exists
+        const layerExists = parsed.currentProject.layers?.find((l: Layer) => l.id === validActiveId);
+        if (!layerExists && parsed.currentProject.layers?.length > 0) {
+            validActiveId = parsed.currentProject.layers[0].id;
+        }
+
+        savedState = {
+          currentProject: parsed.currentProject,
+          activeLayerId: validActiveId,
+          currentFrame: parsed.currentFrame ?? 0,
+          selectedTool: parsed.selectedTool ?? { type: "pencil", size: 1 },
+          primaryColor: parsed.primaryColor ?? "#000000",
+          secondaryColor: parsed.secondaryColor ?? "#ffffff",
+        };
+      }
+    }
+  } catch (e) {
+    console.error("Failed to load autosave:", e);
+  }
+
+  return {
   currentProject: null,
   currentFrame: 0,
   activeLayerId: null,
@@ -74,6 +104,8 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => (
   tileLayout: { x: 3, y: 3 }, // Default 3x3
   past: [],
   future: [],
+  
+  ...savedState,
 
   setCurrentProject: (project) => set((state) => {
     let activeId = state.activeLayerId;
@@ -377,7 +409,13 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => (
       };
       
       frames[frameIndex] = updatedFrame;
-      return { currentProject: { ...state.currentProject, frames } };
+      // Important for reactivity: We must ensure currentProject is a NEW object reference
+      return { 
+        currentProject: { 
+           ...state.currentProject, 
+           frames 
+        } 
+      };
     }),
 
   updatePixels: (frameIndex, updates) =>
@@ -410,6 +448,46 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => (
       };
       
       frames[frameIndex] = updatedFrame;
-      return { currentProject: { ...state.currentProject, frames } };
+      // Important for reactivity: We must ensure currentProject is a NEW object reference
+      return { 
+        currentProject: { 
+           ...state.currentProject, 
+           frames 
+        } 
+      };
     }),
-}));
+  };
+});
+
+
+// Debounce helper
+const debounce = (fn: Function, ms: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), ms);
+  };
+};
+
+// Auto-save subscription with debounce
+const saveState = debounce((state: EditorState) => {
+  if (state.currentProject) {
+    const stateToSave = {
+      currentProject: state.currentProject,
+      activeLayerId: state.activeLayerId,
+      currentFrame: state.currentFrame,
+      selectedTool: state.selectedTool,
+      primaryColor: state.primaryColor,
+      secondaryColor: state.secondaryColor,
+    };
+    try {
+      localStorage.setItem("poxil-autosave-v2", JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Failed to save state to localStorage", e);
+    }
+  }
+}, 1000); // Save after 1 second of inactivity
+
+useEditorStore.subscribe((state) => {
+  saveState(state);
+});
