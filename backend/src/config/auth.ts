@@ -5,12 +5,25 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const auth = betterAuth({
+  debug: true, // Enable debugging to see SQL errors
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "email-password"],
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

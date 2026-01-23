@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp } from "../lib/auth";
+import { GoogleFill } from "akar-icons";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -128,6 +129,29 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-850 text-gray-400">Or continue with</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await signIn.social({
+                  provider: "google",
+                  callbackURL: `${window.location.origin}/dashboard`,
+                });
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-900 font-primary py-3 rounded-lg transition-all transform active:scale-[0.98] shadow-lg"
+            >
+              <GoogleFill size={20} />
+              Google
+            </button>
 
             <button
               type="submit"
