@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ArrowBack, ArrowForward, Download, Save, SettingsHorizontal, ArrowLeft } from "akar-icons";
+import { ArrowBack, ArrowForward, Download, Save, SettingsHorizontal, ArrowLeft, ShareBox } from "akar-icons";
 import { Link, useNavigate } from "react-router-dom";
 import MenuDropdown from "./MenuDropdown";
 import { useEditorStore } from "../lib/store";
 import { exportProjectAsImage, exportProjectAsGif, exportProjectAsSvg } from "../utils/exportUtils";
 import ExportDialog from "./ExportDialog";
+import ShareDialog from "./ShareDialog";
 import ConfirmDialog from "./ConfirmDialog";
 import Toast, { ToastType } from "./Toast";
 import axios from "axios";
@@ -28,6 +29,7 @@ export default function Header({ onNewFile }: HeaderProps) {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [projectName, setProjectName] = useState(currentProject?.name || "Untitled");
   const [isSaving, setIsSaving] = useState(false);
   
@@ -37,6 +39,17 @@ export default function Header({ onNewFile }: HeaderProps) {
      isOpen: false,
      config: {}
   });
+
+  const handleTogglePublic = async (isPublic: boolean) => {
+    if (!currentProject) return;
+    try {
+      await axios.put(`/api/projects/${currentProject.id}`, { isPublic });
+      setCurrentProject({ ...currentProject, isPublic });
+      showToast(`Project is now ${isPublic ? 'Public' : 'Private'}`, 'success');
+    } catch (error) {
+      showToast("Failed to update privacy settings", 'error');
+    }
+  };
 
   // New File Logic with Save Prompt
   const handleNewFile = () => {
@@ -158,6 +171,14 @@ export default function Header({ onNewFile }: HeaderProps) {
             onClose={() => setToast(null)} 
           />
       )}
+
+      <ShareDialog 
+         isOpen={showShareDialog} 
+         isPublic={currentProject?.isPublic || false}
+         projectId={currentProject?.id || ''}
+         onClose={() => setShowShareDialog(false)}
+         onTogglePublic={handleTogglePublic}
+      />
 
       <ConfirmDialog 
          isOpen={confirmDialog.isOpen}
@@ -282,6 +303,14 @@ export default function Header({ onNewFile }: HeaderProps) {
        </div>
 
        <div className="flex items-center gap-2">
+
+          <button 
+             onClick={() => setShowShareDialog(true)}
+             className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#3d3842] rounded text-gray-300 transition text-xs font-bold uppercase"
+          >
+             <ShareBox size={14} />
+             <span className="hidden sm:inline">Share</span>
+          </button>
 
           <button 
              onClick={handleExportClick}

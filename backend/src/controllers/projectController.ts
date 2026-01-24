@@ -41,13 +41,30 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
 export const getProject = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id; // Allow undefined
     
     const project = await prisma.project.findFirst({
       where: {
         id,
-        OR: [{ userId: req.user!.id }, { isPublic: true }],
       },
+      include: {
+        user: {
+            select: { name: true, email: true }
+        }
+      }
     });
+
+    if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Access Control: Allow if Owner OR Public
+    const isOwner = userId && project.userId === userId;
+    const isPublic = project.isPublic;
+
+    if (!isOwner && !isPublic) {
+        return res.status(403).json({ message: "Unauthorized access: Private project" });
+    }
 
     if (!project) {
       return res.status(404).json({ error: "Project not found" });

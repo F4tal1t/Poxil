@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validation.js";
 import * as projectController from "../controllers/projectController.js";
 
@@ -34,7 +34,7 @@ const updateProjectSchema = z.object({
 
 router.post("/", requireAuth, validate(createProjectSchema), projectController.createProject);
 router.get("/", requireAuth, projectController.getProjects);
-router.get("/:id", requireAuth, projectController.getProject);
+router.get("/:id", optionalAuth, projectController.getProject);
 router.put("/:id", requireAuth, validate(updateProjectSchema), projectController.updateProject);
 router.delete("/:id", requireAuth, projectController.deleteProject);
 

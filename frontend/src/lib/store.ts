@@ -43,6 +43,7 @@ interface EditorState {
   
   updatePixel: (frameIndex: number, x: number, y: number, color: string) => void;
   updatePixels: (frameIndex: number, updates: {x: number, y: number, color: string}[]) => void;
+  updateSpecificLayerPixels: (frameIndex: number, layerId: string, updates: {x: number, y: number, color: string}[]) => void;
   undo: () => void;
   redo: () => void;
   pushToHistory: () => void;
@@ -449,6 +450,39 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => {
       
       frames[frameIndex] = updatedFrame;
       // Important for reactivity: We must ensure currentProject is a NEW object reference
+      return { 
+        currentProject: { 
+           ...state.currentProject, 
+           frames 
+        } 
+      };
+    }),
+
+  updateSpecificLayerPixels: (frameIndex, layerId, updates) =>
+    set((state) => {
+      if (!state.currentProject) return state;
+      
+      const frames = [...state.currentProject.frames];
+      const frameCode = frames[frameIndex];
+      if (!frameCode || !frameCode.layers[layerId]) return state; 
+
+      const layerGrid = frameCode.layers[layerId].map(row => [...row]);
+      
+      updates.forEach(({x, y, color}) => {
+         if (layerGrid[y] && layerGrid[y][x] !== undefined) {
+             layerGrid[y][x] = color;
+         }
+      });
+      
+      const updatedFrame = {
+        ...frameCode,
+        layers: {
+          ...frameCode.layers,
+          [layerId]: layerGrid
+        }
+      };
+      
+      frames[frameIndex] = updatedFrame;
       return { 
         currentProject: { 
            ...state.currentProject, 

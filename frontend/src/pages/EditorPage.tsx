@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { useEditorStore } from "../lib/store";
+import { socket } from "../lib/socket"; // Import socket
+import { useSession } from "../lib/auth";
+import GuestNameDialog from "../components/GuestNameDialog";
 import Header from "../components/Header";
 import TopToolbar from "../components/TopToolbar";
 import ToolPalette from "../components/ToolPalette";
@@ -22,8 +25,58 @@ export default function EditorPage() {
   const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
   const [isLoading, setIsLoading] = useState(!!projectId);
   
-  const { setCurrentProject, currentProject } = useEditorStore();
+  // Auth & Guest State
+  const { data: session, isPending: isSessionLoading } = useSession();
+  const [guestName, setGuestName] = useState<string | null>(null);
+  const [showGuestDialog, setShowGuestDialog] = useState(false);
+
+  const { setCurrentProject, currentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
   const pixelSize = 16;
+
+  // Socket Connection
+  useEffect(() => {
+    if (!projectId || isSessionLoading) return;
+
+    // Determine identity
+    const hasIdentity = !!session?.user || !!guestName;
+    
+    if (!hasIdentity) {
+         setShowGuestDialog(true);
+         return;
+    }
+    
+    // We have an identity, ensure dialog is closed
+    setShowGuestDialog(false);
+
+    const userName = session?.user?.name || guestName || "Guest";
+    const userId = session?.user?.id || `guest-${guestName}-${Math.floor(Math.random() * 1000)}`;
+
+    socket.connect();
+    
+    // Slight delay to ensure connection? No, connect() is async but emits are queued usually.
+    socket.emit("join-project", { 
+        projectId, 
+        user: { name: userName, id: userId } 
+    });
+
+    const handlePixelUpdate = (data: any) => {
+       if (data.updates && Array.isArray(data.updates)) {
+           updateSpecificLayerPixels(data.frameIndex, data.layerId, data.updates);
+       } else if (data.x !== undefined) {
+           if (data.layerId) {
+               updateSpecificLayerPixels(data.frameIndex || 0, data.layerId, [{x: data.x, y: data.y, color: data.color}]);
+           }
+       }
+    };
+    
+    socket.on("pixel-update", handlePixelUpdate);
+
+    return () => {
+      socket.off("pixel-update");
+      socket.emit("leave-project", projectId);
+      socket.disconnect();
+    };
+  }, [projectId, updateSpecificLayerPixels, session, guestName, isSessionLoading]);
 
   useEffect(() => {
     if (projectId) {
@@ -162,6 +215,7 @@ export default function EditorPage() {
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
 
       <div className="h-screen flex flex-col bg-[#151316] text-white">
+        <GuestNameDialog isOpen={showGuestDialog} onSubmit={setGuestName} />
         <Header onNewFile={() => setShowDialog(true)} />
         <TopToolbar 
           zoom={zoom}

@@ -33,3 +33,21 @@ export const requireAuth = async (
     return res.status(401).json({ error: "Invalid session" });
   }
 };
+
+export const optionalAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (session) {
+      req.user = session.user;
+      req.session = session.session;
+    }
+    next();
+  } catch (error) {
+    // Ignore errors for optional auth, just proceed as guest
+    next();
+  }
+};

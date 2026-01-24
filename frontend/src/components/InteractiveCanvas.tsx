@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useEditorStore } from "../lib/store";
 import { getCharPixels } from "../lib/pixelFont";
+import { socket } from "../lib/socket";
 
 // Helper functions for geometric shapes
 function getLinePoints(x0: number, y0: number, x1: number, y1: number) {
@@ -331,9 +332,20 @@ export default function InteractiveCanvas({
     if (currentProject) {
       if (points.length === 0) return;
       // Use batch update to prevent lag
-      updatePixels(currentFrame, points.filter(p => p.x >= 0 && p.x < width && p.y >= 0 && p.y < height));
+      const validPoints = points.filter(p => p.x >= 0 && p.x < width && p.y >= 0 && p.y < height);
+      updatePixels(currentFrame, validPoints);
+
+      // Emit to socket
+      if (activeLayerId && socket.connected) {
+         socket.emit("pixel-update", {
+             projectId: currentProject.id,
+             layerId: activeLayerId,
+             frameIndex: currentFrame,
+             updates: validPoints
+         });
+      }
     }
-  }, [width, height, currentProject, currentFrame, updatePixels]);
+  }, [width, height, currentProject, currentFrame, updatePixels, activeLayerId]);
 
   // Draw with brush size (square brush) and mirror support
   const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {
