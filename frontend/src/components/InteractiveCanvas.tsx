@@ -224,7 +224,6 @@ export default function InteractiveCanvas({
     // Onion skin logic remains separate for now, only applied to main tile usually
     
     // Draw active selection
-
     if (selection) {
       const minX = Math.min(selection.start.x, selection.end.x);
       const minY = Math.min(selection.start.y, selection.end.y);
@@ -466,6 +465,7 @@ export default function InteractiveCanvas({
         break;
       case "fill":
         // Flood fill implementation would go here
+        pushToHistory(); // Save state before fill
         floodFill(coords.x, coords.y, color);
         break;
     }
@@ -666,6 +666,61 @@ export default function InteractiveCanvas({
           <div className="w-full h-full border-2 border-blue-500 rounded-full bg-blue-500/20"></div>
           <div className="absolute top-1/2 left-1/2 w-0.5 h-0.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
+      )}
+
+      {/* Selection Move Handle - Top Right of Selection Box */}
+      {selection && (
+          <div
+             className="absolute z-20 cursor-move"
+             style={{
+                 left: (Math.max(selection.start.x, selection.end.x) + 1) * pixelSize,
+                 top: (Math.min(selection.start.y, selection.end.y)) * pixelSize - 12,
+             }}
+             onMouseDown={(e) => {
+                 e.stopPropagation(); 
+                 e.preventDefault();
+                 // Hacky way to trigger move mode: simulated mousedown on the selection center
+                 const centerX = (selection.start.x + selection.end.x) / 2;
+                 const centerY = (selection.start.y + selection.end.y) / 2;
+                 
+                 // We manually set state to start dragging the selection
+                 // But simply starting drag moves the selection frame, not pixels yet without complex logic
+                 // For now, this handle acts as a visual grip that allows dragging the frame effectively
+                 // by leveraging the existing "startInSelection" logic if we fake it?
+                 // No, better to just let user drag inside the box.
+                 
+                 // However, user requested a button. Let's make this button trigger a "Cut & Move" action?
+                 // Or just be a grip. 
+                 
+                 // Since the user asked for a "button to move around", let's make dragging THIS button move the selection.
+                 // We need to inject into the existing mouse flow.
+                 const rect = canvasRef.current?.getBoundingClientRect();
+                 if(rect) {
+                     // We can't easily inject into React state from here without duplicating logic.
+                     // Instead, let's just make this button purely visual for now or bind it to a specific action
+                     // For "moving the selected part", usually dragging INSIDE the selection is enough.
+                     // I will attach the handleMouseDown of the canvas to this div, so dragging it acts like dragging the canvas
+                     // but we need to ensure coordinate math works.
+                     
+                     // Actually, if we just pass the event, the target is the div, not canvas.
+                     // Let's manually trigger the state change
+                     setIsDrawing(true);
+                     setStartPos({ x: Math.round(centerX), y: Math.round(centerY) }); 
+                     // This sets start pos to center of selection, so it THINKS we clicked inside.
+                 }
+            }}
+          >
+              <div className="bg-blue-600 text-white p-1 rounded-full shadow-md hover:bg-blue-700 transition-colors pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="5 9 2 12 5 15"></polyline>
+                      <polyline points="9 5 12 2 15 5"></polyline>
+                      <polyline points="15 19 12 22 9 19"></polyline>
+                      <polyline points="19 9 22 12 19 15"></polyline>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <line x1="12" y1="2" x2="12" y2="22"></line>
+                  </svg>
+              </div>
+          </div>
       )}
     </div>
   );

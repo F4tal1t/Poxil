@@ -114,7 +114,7 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => {
       activeId = project.layers[0].id;
     }
     // Reset history when loading new project
-    return { currentProject: project, activeLayerId: activeId, past: [], future: [] };
+    return { currentProject: project, activeLayerId: activeId, currentFrame: 0, past: [], future: [] };
   }),
   
   // History Helpers
@@ -385,15 +385,14 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => {
       const layer = state.currentProject.layers.find(l => l.id === state.activeLayerId);
       if (layer?.locked || !layer?.visible) return state;
 
-      // NOTE: History logic moved to InteractiveCanvas.tsx (e.g., onMouseDown) 
-      // OR we just assume every batch of drawing updates *one* history state?
-      // Since updatePixel is called PER PIXEL during drag, we cannot push history here.
-      // We need a separate 'commitAction' or manipulate 'past' in UI component.
-      // FIX: Implementation of history for Drawing needs to happen at "MouseUp" level in component
-      // OR we provide a method to snapshot state.
-      
       const frames = [...state.currentProject.frames];
       const frameCode = frames[frameIndex];
+      
+      if (!frameCode) {
+           console.warn(`Attempted to update pixel on non-existent frame ${frameIndex}`);
+           return state;
+      }
+
       if (!frameCode.layers[state.activeLayerId]) {
          frameCode.layers[state.activeLayerId] = createGrid(state.currentProject.width, state.currentProject.height);
       }
@@ -428,6 +427,12 @@ export const useEditorStore = create<EditorState & HistoryState>((set, get) => {
 
       const frames = [...state.currentProject.frames];
       const frameCode = frames[frameIndex];
+      
+      if (!frameCode) {
+           console.warn(`Attempted to update pixels on non-existent frame ${frameIndex}`);
+           return state;
+      }
+
       if (!frameCode.layers[state.activeLayerId]) {
          frameCode.layers[state.activeLayerId] = createGrid(state.currentProject.width, state.currentProject.height);
       }

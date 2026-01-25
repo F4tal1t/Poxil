@@ -102,7 +102,7 @@ export default function LandingPage() {
       }, 0) // Start at time 0
       
       .fromTo(firstFeatureRef.current, {
-        clipPath: `circle(3.5% at ${clipPathOrigin})`,
+        clipPath: `circle(0% at ${clipPathOrigin})`,
         opacity: 1 // Ensure it's fully opaque, just masked
       }, {
         clipPath: `circle(350% at ${clipPathOrigin})`, // Expand mask to full screen
@@ -148,28 +148,39 @@ export default function LandingPage() {
              />
         </div>
 
-        {/* POXIL Text - Pure White, Heavy Font */}
-        <h1 
-          ref={textRef}
-          className="font-emphasis font-white text-[20vw] leading-none tracking-tighter relative z-30 select-none text-white whitespace-nowrap"
-        >
-          Poxil
-        </h1>
-        <div ref={heroButtonsRef} className="absolute right-8 md:right-16 top-1/2 -translate-y-1/2 flex flex-col gap-6 z-50">
+        {/* POXIL Text - Pure White, Heavy Font with Colored O */}
+        <div className="relative z-30 select-none text-white whitespace-nowrap flex flex-col items-center">
+            <h1 
+              ref={textRef}
+              className="font-emphasis font-white text-[20vw] leading-none tracking-tighter"
+            >
+              P<span className="text-[#df4c16]">o</span>xil
+            </h1>
+            <p className="font-primary text-xl md:text-2xl mt-4 tracking-wide text-gray-300">
+                Tool for pixel art creation and animation
+            </p>
+        </div>
+        
+        {/* Vertical Buttons - Relocated beside Title */}
+        <div ref={heroButtonsRef} className="absolute left-[calc(50%+18vw)] top-1/2 -translate-y-12 flex flex-col gap-4 z-50">
             <Link to="/login" className="group relative">
-                <button className="relative w-16 h-32 bg-transparent border border-[#333] rounded-lg flex flex-col items-center justify-center gap-4 hover:border-white transition-colors duration-300 cursor-pointer">
-                    <span className="text-lg font-primary tracking-widest uppercase select-none" style={{ writingMode: 'vertical-rl' }}>Enter</span>
+                <button className="relative w-12 h-32 bg-transparent border border-[#333] rounded-sm flex flex-col items-center justify-center gap-3 hover:border-white transition-colors duration-300 cursor-pointer backdrop-blur-sm">
+                    <span 
+                        className="text-sm font-primary font-bold tracking-[0.2em] select-none" 
+                        style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}
+                    >
+                        Enter
+                    </span>
                 </button>
             </Link>
 
             <a href="https://github.com/F4tal1t/Poxil" target="_blank" rel="noreferrer" className="group">
-                 <button className="w-16 h-16 bg-transparent border border-[#333] rounded-lg flex items-center justify-center hover:bg-[#333] transition-colors cursor-pointer">
-                    <GithubIcon size={24} className="text-white" />
+                 <button className="w-12 h-12 bg-transparent border border-[#333] rounded-sm flex items-center justify-center hover:bg-[#333] hover:text-white transition-colors cursor-pointer backdrop-blur-sm">
+                    <GithubIcon size={20} className="text-white opacity-80" />
                  </button>
             </a>
         </div>
 
-        {/* Feature 1 Reveal Overlay (Inside "O") - The Portal */}
         <div 
           ref={firstFeatureRef} 
           className="absolute inset-0 flex items-center justify-center z-10 bg-[#050505]"
@@ -178,20 +189,25 @@ export default function LandingPage() {
              {/* Portal Frame Effect */}
              <div className="absolute inset-4 border border-[#333] border-dashed pointer-events-none"></div>
              
-             <div className="max-w-6xl px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                 <div className="text-left">
-                     <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-4 block">01 / Sync</span>
-                     <h2 className="font-emphasis text-6xl md:text-8xl mb-8 leading-[0.85] text-white`">
-                        Real<br/>Time<br/>Link
-                     </h2>
+             {/* Editor Preview Area - Centered Showcase */}
+             <div className="w-full h-full flex flex-col items-center justify-center p-12">
+                 <div className="relative w-full max-w-6xl aspect-video bg-[#1a181c] border border-[#333] rounded-lg shadow-2xl flex items-center justify-center overflow-hidden group">
+                     {/* Image Placeholder */}
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-600 space-y-4">
+                        <span className="font-primary text-sm tracking-[0.2em] uppercase">Editor Interface Preview</span>
+                        <div className="w-16 h-16 border-2 border-gray-700 border-dashed rounded-full animate-spin-slow"></div>
+                        <p className="text-xs font-mono opacity-50">Place editor screenshot here</p>
+                     </div>
+                     
+                     {/* Optional: Overlay Text */}
+                     <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                        <h3 className="text-white font-emphasis text-3xl">Professional Grade Tools</h3>
+                     </div>
                  </div>
-                 <div className="text-left border-l border-[#333] pl-8">
-                     <p className="font-primary text-2xl text-gray-400 leading-relaxed mb-6">
-                        <span className="text-white font-bold">WebSocket Powered.</span> Instantaneous state synchronization across all connected clients.
-                     </p>
-                     <p className="font-primary text-lg text-gray-500">
-                        See every pixel placement as it happens. Zero latency collaborative drawing for remote teams.
-                     </p>
+                 
+                 <div className="mt-8 text-center max-w-2xl">
+                     <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-2 block">01 / Creation</span>
+                     <h2 className="font-emphasis text-4xl text-white">Full-Fledged Editor</h2>
                  </div>
              </div>
         </div>
@@ -244,6 +260,31 @@ export default function LandingPage() {
                         </p>
                     </div>
                 </div>
+             </div>
+          </section>
+
+          {/* Feature 4 - Moved from Start */}
+           <section className="min-h-screen flex flex-col items-center justify-center px-6 border-t border-[#222] relative overflow-hidden">
+             {/* Creative Background Element */}
+             <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[20vw] font-emphasis text-[#1a181c] select-none -z-10 leading-none">
+                04
+             </div>
+
+             <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                 <div className="text-left">
+                     <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-4 block">04 / Sync</span>
+                     <h2 className="font-emphasis text-6xl md:text-8xl mb-8 leading-[0.85] text-white">
+                        Real<br/>Time<br/>Link
+                     </h2>
+                 </div>
+                 <div className="text-left border-l border-[#333] pl-8">
+                     <p className="font-primary text-2xl text-gray-400 leading-relaxed mb-6">
+                        <span className="text-white font-bold">WebSocket Powered.</span> Instantaneous state synchronization across all connected clients.
+                     </p>
+                     <p className="font-primary text-lg text-gray-500">
+                        See every pixel placement as it happens. Zero latency collaborative drawing for remote teams.
+                     </p>
+                 </div>
              </div>
           </section>
       </div>

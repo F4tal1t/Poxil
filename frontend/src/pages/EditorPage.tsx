@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect , useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { useEditorStore } from "../lib/store";
@@ -30,8 +30,78 @@ export default function EditorPage() {
   const [guestName, setGuestName] = useState<string | null>(null);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
 
-  const { setCurrentProject, currentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
+  const { setCurrentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
   const pixelSize = 16;
+
+  // Cleanup effect
+  useEffect(() => {
+     return () => {
+         // Optionally clear store or connections here
+     };
+  }, []);
+
+  // Global Shortcuts Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        // Ignore if input focused
+        if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
+
+        const store = useEditorStore.getState();
+        const { undo, redo, setSelectedTool } = store;
+
+        // Undo / Redo
+        if (e.ctrlKey) {
+            if (e.key === 'z') {
+                e.preventDefault();
+                undo();
+            } else if (e.key === 'y' || (e.shiftKey && e.key === 'Z')) {
+                e.preventDefault();
+                redo();
+            }
+        }
+
+        // Tools
+        switch(e.key.toLowerCase()) {
+            case 'p': setSelectedTool({ ...store.selectedTool, type: 'pencil' }); break;
+            case 'e': setSelectedTool({ ...store.selectedTool, type: 'eraser' }); break;
+            case 'f': setSelectedTool({ ...store.selectedTool, type: 'fill' }); break;
+            case 'l': setSelectedTool({ ...store.selectedTool, type: 'line' }); break;
+            case 'r': setSelectedTool({ ...store.selectedTool, type: 'rectangle' }); break;
+            case 'c': setSelectedTool({ ...store.selectedTool, type: 'circle' }); break;
+            case 'i': setSelectedTool({ ...store.selectedTool, type: 'picker' }); break;
+            case 's': setSelectedTool({ ...store.selectedTool, type: 'selection' }); break;
+            case 'm': setSelectedTool({ ...store.selectedTool, type: 'selection' }); break; // M for marquee often used
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Auto-Save Logic (Every 1 minute)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+        // "polling wont happen when the user is disconnected"
+        if (!socket.connected) return;
+        
+        const proj = useEditorStore.getState().currentProject;
+        if (!projectId || !proj) return;
+
+        try {
+            console.log("Auto-saving project...");
+            await axios.put(`/api/projects/${projectId}`, {
+                frames: proj.frames,
+                layers: proj.layers,
+                width: proj.width,
+                height: proj.height
+            });
+        } catch (error) {
+            console.error("Auto-save failed", error);
+        }
+    }, 60 * 1000); // 1 minute
+
+    return () => clearInterval(interval);
+  }, [projectId]);
 
   // Socket Connection
   useEffect(() => {
@@ -61,10 +131,10 @@ export default function EditorPage() {
 
     const handlePixelUpdate = (data: any) => {
        if (data.updates && Array.isArray(data.updates)) {
-           updateSpecificLayerPixels(data.frameIndex, data.layerId, data.updates);
+           useEditorStore.getState().updateSpecificLayerPixels(data.frameIndex, data.layerId, data.updates);
        } else if (data.x !== undefined) {
            if (data.layerId) {
-               updateSpecificLayerPixels(data.frameIndex || 0, data.layerId, [{x: data.x, y: data.y, color: data.color}]);
+               useEditorStore.getState().updateSpecificLayerPixels(data.frameIndex || 0, data.layerId, [{x: data.x, y: data.y, color: data.color}]);
            }
        }
     };
@@ -76,7 +146,7 @@ export default function EditorPage() {
       socket.emit("leave-project", projectId);
       socket.disconnect();
     };
-  }, [projectId, updateSpecificLayerPixels, session, guestName, isSessionLoading]);
+  }, [projectId, session, guestName, isSessionLoading]);
 
   useEffect(() => {
     if (projectId) {
@@ -130,7 +200,7 @@ export default function EditorPage() {
       }
 
       setCanvasSize({ width: projectData.width, height: projectData.height });
-      setCurrentProject(projectData);
+      useEditorStore.getState().setCurrentProject(projectData);
     } catch (error) {
       console.error("Failed to load project", error);
       navigate("/dashboard"); // Redirect on error/unauthorized
@@ -167,7 +237,7 @@ export default function EditorPage() {
       updatedAt: new Date().toISOString()
     };
     
-    setCurrentProject(newProject);
+    useEditorStore.getState().setCurrentProject(newProject);
   };
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 4));
