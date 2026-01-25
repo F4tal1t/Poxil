@@ -145,7 +145,7 @@ export default function DashboardPage() {
         {/* Grid */}
         {loading ? (
           <div className="flex justify-center py-20">
-             <img src="/Loader.gif" alt="Loading..." className="h-16 w-16" />
+             <img src="/Loader.gif" alt="Loading..." className="h-32 w-32" />
           </div>
         ) : filteredProjects.length === 0 ? (
           <div className="text-center py-20 bg-[#1f1c21] rounded-xl border border-[#2a2630] border-dashed">

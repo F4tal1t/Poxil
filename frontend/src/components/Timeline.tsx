@@ -137,16 +137,10 @@ export default function Timeline({ className = "" }: TimelineProps) {
                          : "border-[#2a2630] bg-[#1a181c] hover:border-gray-600"
                    }`}
                 >
-                   {/* Frame Number */}
-                   <span className={`absolute top-0.5 left-1 text-[9px] font-mono font-bold ${
-                       currentFrame === index ? "text-[#df4c16]" : "text-gray-600"
-                   }`}>
-                      {index + 1}
-                   </span>
-                   
+                                      
                    {/* Mini Preview Placeholder */}
                    <div className="absolute inset-0 m-auto flex items-center justify-center opacity-20 pointer-events-none">
-                       <span className="text-xl text-gray-700 font-bold">{index + 1}</span>
+                       <span className="text-xl text-gray-100 font-primary">{index + 1}</span>
                    </div>
                 </div>
             ))}

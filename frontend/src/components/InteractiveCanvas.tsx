@@ -710,7 +710,7 @@ export default function InteractiveCanvas({
                  }
             }}
           >
-              <div className="bg-blue-600 text-white p-1 rounded-full shadow-md hover:bg-blue-700 transition-colors pointer-events-none">
+              <div className="bg-[#df4c16] text-white p-1 rounded-full shadow-md hover:bg-blue-700 transition-colors pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="5 9 2 12 5 15"></polyline>
                       <polyline points="9 5 12 2 15 5"></polyline>

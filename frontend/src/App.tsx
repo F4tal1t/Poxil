@@ -11,7 +11,7 @@ function App() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-850 text-white">
-        <img src="/Loader.gif" alt="Loading..." className="h-16 w-16" />
+        <img src="/Loader.gif" alt="Loading..." className="h-32 w-32" />
       </div>
     );
   }

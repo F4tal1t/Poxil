@@ -5,8 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
 // Configurable Variables
-const ZOOM_TARGET_ORIGIN = "48% 75%"; // Coordinates for the "O" zoom
-const BACKGROUND_GIF = "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif"; // Placeholder - Replace with your looped GIF
+const ZOOM_TARGET_ORIGIN = "48% 65%"; // Coordinates for the "O" zoom
 
 // Custom Icons for Navigation only (kept minimal)
 const PaintIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
@@ -60,8 +59,8 @@ export default function LandingPage() {
         gsap.to(backgroundRef.current, {
             x: -moveX,
             y: -moveY,
-            duration: 1,
-            ease: "power2.out"
+            duration: 2.5,
+            ease: "power3.out"
         });
     };
     window.addEventListener("mousemove", handleMouseMove);
@@ -77,7 +76,7 @@ export default function LandingPage() {
     const ctx = gsap.context(() => {
       // clip-path syntax requires "at x y", transformOrigin uses "x y"
       // We use the same coordinates for both to align the zoom and the portal opening
-      const clipPathOrigin = "49% 60%"; 
+      const clipPathOrigin = "49% 56%"; 
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -105,7 +104,7 @@ export default function LandingPage() {
         clipPath: `circle(0% at ${clipPathOrigin})`,
         opacity: 1 // Ensure it's fully opaque, just masked
       }, {
-        clipPath: `circle(350% at ${clipPathOrigin})`, // Expand mask to full screen
+        clipPath: `circle(450% at ${clipPathOrigin})`, // Expand mask to full screen
         ease: "power2.inOut",
         duration: 1,
       }, 0) // Start EXACTLY with the zoom
@@ -138,38 +137,45 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[#151316] z-0"></div>
         <div 
             ref={backgroundRef} 
-            className="absolute inset-[-100px] z-0 opacity-30 pointer-events-none mix-blend-screen"
+            className="absolute inset-[-100px] z-0 opacity-15 pointer-events-none mix-blend-screen"
         >
              {/* Placeholder GIF - Replace src with your specific loop */}
              <img 
-                src={BACKGROUND_GIF} 
+                src="/Back.gif" 
                 alt="Background" 
                 className="w-full h-full object-cover grayscale opacity-50" 
              />
         </div>
 
         {/* POXIL Text - Pure White, Heavy Font with Colored O */}
-        <div className="relative z-30 select-none text-white whitespace-nowrap flex flex-col items-center">
+        <div ref={textRef} className="relative z-30 select-none text-white whitespace-nowrap flex flex-col items-center">
             <h1 
-              ref={textRef}
-              className="font-emphasis font-white text-[20vw] leading-none tracking-tighter"
+              className="font-emphasis font-gray-100 text-[20vw] leading-none tracking-tighter"
             >
               P<span className="text-[#df4c16]">o</span>xil
             </h1>
             <p className="font-primary text-xl md:text-2xl mt-4 tracking-wide text-gray-300">
                 Tool for pixel art creation and animation
             </p>
+
+            {/* Scroll Indicator */}
+            <div className="absolute bottom-[-20vh] flex flex-col items-center gap-2 opacity-50">
+                <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center p-1">
+                   <div className="w-1 h-3 bg-white rounded-full animate-scroll"></div>
+                </div>
+                <span className="font-primary text-xs tracking-widest uppercase">Scroll :D</span>
+            </div>
         </div>
         
         {/* Vertical Buttons - Relocated beside Title */}
-        <div ref={heroButtonsRef} className="absolute left-[calc(50%+18vw)] top-1/2 -translate-y-12 flex flex-col gap-4 z-50">
+        <div ref={heroButtonsRef} className="absolute left-[calc(50%+22vw)] top-1/2 -translate-y-12 flex flex-col gap-4 z-50">
             <Link to="/login" className="group relative">
                 <button className="relative w-12 h-32 bg-transparent border border-[#333] rounded-sm flex flex-col items-center justify-center gap-3 hover:border-white transition-colors duration-300 cursor-pointer backdrop-blur-sm">
                     <span 
                         className="text-sm font-primary font-bold tracking-[0.2em] select-none" 
                         style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}
                     >
-                        Enter
+                        ENTER
                     </span>
                 </button>
             </Link>
@@ -192,113 +198,179 @@ export default function LandingPage() {
              {/* Editor Preview Area - Centered Showcase */}
              <div className="w-full h-full flex flex-col items-center justify-center p-12">
                  <div className="relative w-full max-w-6xl aspect-video bg-[#1a181c] border border-[#333] rounded-lg shadow-2xl flex items-center justify-center overflow-hidden group">
-                     {/* Image Placeholder */}
-                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-600 space-y-4">
-                        <span className="font-primary text-sm tracking-[0.2em] uppercase">Editor Interface Preview</span>
-                        <div className="w-16 h-16 border-2 border-gray-700 border-dashed rounded-full animate-spin-slow"></div>
-                        <p className="text-xs font-mono opacity-50">Place editor screenshot here</p>
-                     </div>
+                     <img 
+                        src="/Editor.png" 
+                        alt="Editor Interface" 
+                        className="w-full h-full object-cover z-10"
+                     />
                      
                      {/* Optional: Overlay Text */}
-                     <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                     <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-20">
                         <h3 className="text-white font-emphasis text-3xl">Professional Grade Tools</h3>
                      </div>
                  </div>
                  
-                 <div className="mt-8 text-center max-w-2xl">
-                     <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-2 block">01 / Creation</span>
-                     <h2 className="font-emphasis text-4xl text-white">Full-Fledged Editor</h2>
+                 <div className="mt-8 w-full max-w-6xl flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+                     <div className="w-full md:w-1/2 text-left">
+                        <h2 className="font-emphasis text-4xl text-white">Full-Fledged Editor</h2>
+                     </div>
+                     <div className="w-full md:w-1/2 text-left">
+                        <p className="text-gray-400 font-primary text-lg leading-relaxed">
+                            Create and animate pixel art with our robust in-browser editor. Featuring layers, frames, and a suite of pixel-perfect tools designed for artists.
+                        </p>
+                     </div>
                  </div>
              </div>
         </div>
 
       </div>
 
-      {/* Subsequent Feature Sections (Scroll naturally after unpin) */}
       <div className="relative z-30 bg-[#151316]">
           
-          {/* Feature 2 */}
-           <section className="min-h-screen flex flex-col items-center justify-center px-6 border-t border-[#222] relative overflow-hidden">
-             {/* Creative Background Element */}
-             <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[20vw] font-emphasis text-[#1a181c] select-none -z-10 leading-none">
-                02
+           {/* Feature: Animations */}
+           <section className="min-h-screen flex flex-col items-center justify-center px-6 relative bg-[#151316]">
+             {/* Background Overlay */}
+             <div className="absolute inset-0 z-0 opacity-25 pointer-events-none mix-blend-screen">
+                 <img src="/Background.png" alt="" className="w-full h-full object-cover" />
              </div>
 
-             <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <div className="order-2 md:order-1">
-                    <div className="space-y-6">
-                        <div className="h-px w-32 bg-[#df4c16]"></div>
-                        <p className="font-primary text-2xl text-gray-400 leading-relaxed">
-                            <span className="text-white font-bold block mb-2">Layer Stack System.</span>
-                            Construct complex scenes with non-destructive layering. Blend modes, opacity control, and locking mechanisms included.
-                        </p>
-                    </div>
-                </div>
-                <div className="order-1 md:order-2 text-right">
-                    <h2 className="font-emphasis text-6xl md:text-9xl leading-[0.85] uppercase text-white">
-                        Safe<br/>State<br/>Logic
+             <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative z-10">
+                
+                <div className="text-center md:text-left">
+                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
+                        Sprite<br/>Animations
                     </h2>
                 </div>
+
+                <div className="flex justify-center py-8 md:py-0">
+                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
+                         <img src="/Loader.gif" className="w-full h-full object-cover opacity-80 mix-blend-screen" alt="Animation Loop" />
+                    </div>
+                </div>
+
+                <div className="text-center md:text-left pl-0 md:pl-8 border-none md:border-solid">
+                    <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
+                        <span className="text-white font-bold">Timeline Architecture </span> <br/>
+                        Keyframe-based animation tools built directly into the editor for seamless motion.
+                    </p>
+                    <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                        Onion Skinning • Sprite Export
+                    </p>
+                </div>
+
              </div>
           </section>
 
-          {/* Feature 3 */}
-           <section className="min-h-screen flex flex-col items-center justify-center px-6 border-t border-[#222] relative">
-             <div className="max-w-6xl w-full">
-                <div className="flex flex-col items-center text-center">
-                    <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-4">03 / Motion</span>
-                    <h2 className="font-emphasis text-6xl md:text-9xl mb-12 text-white">
-                        Velocity
+          {/* Feature: Sync */}
+           <section className="min-h-screen flex flex-col items-center justify-center px-6 relative">
+             {/* Background Overlay */}
+             <div className="absolute inset-0 z-0 opacity-25 pointer-events-none mix-blend-screen">
+                 <img src="/Background.png" alt="" className="w-full h-full object-cover" />
+             </div>
+
+             <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative z-10">
+                 
+                 {/* Left: Title */}
+                 <div className="text-center md:text-left">
+                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
+                        Live<br/>Sync
                     </h2>
-                    <div className="max-w-2xl border-x border-[#333] px-12 py-8">
-                        <p className="font-primary text-2xl text-gray-400 leading-relaxed">
-                            <span className="text-white font-bold">Timeline Architecture.</span> 
-                            Keyframe-based animation tools built directly into the editor. 
-                        </p>
-                        <p className="font-primary text-lg text-gray-500 mt-4">
-                            Includes Onion Skinning for precise frame transitions and direct Sprite Sheet export.
-                        </p>
+                 </div>
+
+                 {/* Middle: GIF Placeholder */}
+                 <div className="flex justify-center py-8 md:py-0">
+                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
+                         {/* Replace with Collaboration GIF */}
+                         <div className="absolute inset-0 bg-gradient-to-bl from-blue-500/10 to-transparent"></div>
                     </div>
                 </div>
+
+                 {/* Right: Description */}
+                 <div className="text-center md:text-left border-l border-[#333] pl-0 md:pl-8 border-none md:border-solid">
+                     <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
+                        <span className="text-white font-bold">Multiplayer Engine.</span> 
+                        Work on the same canvas with your team. Zero-latency updates powered by WebSockets.
+                     </p>
+                     <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                        Cursor Tracking • Chat Integration
+                     </p>
+                 </div>
              </div>
           </section>
 
-          {/* Feature 4 - Moved from Start */}
-           <section className="min-h-screen flex flex-col items-center justify-center px-6 border-t border-[#222] relative overflow-hidden">
-             {/* Creative Background Element */}
-             <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[20vw] font-emphasis text-[#1a181c] select-none -z-10 leading-none">
-                04
+          {/* Feature: Auto Save */}
+           <section className="min-h-screen flex flex-col items-center justify-center px-6 relative">
+             {/* Background Overlay */}
+             <div className="absolute inset-0 z-0 opacity-25 pointer-events-none mix-blend-screen">
+                 <img src="/Background.png" alt="" className="w-full h-full object-cover" />
              </div>
 
-             <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                 <div className="text-left">
-                     <span className="font-emphasis text-[#df4c16] text-xl tracking-widest mb-4 block">04 / Sync</span>
-                     <h2 className="font-emphasis text-6xl md:text-8xl mb-8 leading-[0.85] text-white">
-                        Real<br/>Time<br/>Link
-                     </h2>
-                 </div>
-                 <div className="text-left border-l border-[#333] pl-8">
-                     <p className="font-primary text-2xl text-gray-400 leading-relaxed mb-6">
-                        <span className="text-white font-bold">WebSocket Powered.</span> Instantaneous state synchronization across all connected clients.
-                     </p>
-                     <p className="font-primary text-lg text-gray-500">
-                        See every pixel placement as it happens. Zero latency collaborative drawing for remote teams.
-                     </p>
-                 </div>
+             <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative z-10">
+                
+                {/* Left: Title */}
+                <div className="text-center md:text-left">
+                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
+                        Cloud<br/>State
+                    </h2>
+                </div>
+
+                {/* Middle: GIF Placeholder */}
+                <div className="flex justify-center py-8 md:py-0">
+                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
+                         {/* Replace with Cloud Save GIF */}
+                         <div className="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent"></div>
+                    </div>
+                </div>
+
+                {/* Right: Description */}
+                <div className="text-center md:text-left border-l border-[#333] pl-0 md:pl-8 border-none md:border-solid">
+                    <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
+                        <span className="text-white font-bold">Asynchronous Saving.</span> 
+                        Never lose a pixel. Background synchronization ensures your workspace is preserved across sessions and devices.
+                    </p>
+                    <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                        60s Interval • Local Cache
+                    </p>
+                </div>
+
              </div>
           </section>
       </div>
 
-      {/* Footer/CTA Section */}
-      <section className="min-h-[50vh] flex items-center justify-center bg-white text-black relative z-30">
-            <div className="text-center">
-                <h2 className="text-6xl md:text-8xl font-emphasis font-black mb-8 tracking-tighter">
-                </h2>
-                <Link to="/login" className="px-12 py-4 border-2 border-black text-black text-xl font-bold font-primary rounded-full hover:bg-black hover:text-white transition-colors inline-block uppercase tracking-widest">
-                    Launch Editor
+      {/* Footer */}
+      <footer className="h-[60vh] bg-[#151316] relative overflow-hidden flex flex-col justify-end z-30">
+
+        <div className="relative z-10 w-full flex flex-col md:flex-row items-end justify-between">
+            
+            {/* Left: POXIL Text - Attached to bottom left */}
+            <h1 className="font-emphasis text-[30vw] leading-[0.75] bg-gradient-to-b from-[#151316] to-gray-600 bg-clip-text text-transparent select-none opacity-90 ">
+                Poxil
+            </h1>
+            
+            {/* Right: Actions & Links */}
+            <div className="flex flex-col items-end gap-8 p-8 md:p-12 md:mb-8">
+                 <Link to="/login" 
+                    className="group flex items-center gap-2 px-8 py-4 bg-[#111] border border-[#333] rounded-full hover:bg-[#df4c16] hover:border-[#df4c16] hover:text-white transition-all duration-400">
+                    <span className="font-primary text-sm tracking-wider uppercase text-gray-300 group-hover:text-white">Launch Editor</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                 </Link>
+
+                 <div className="flex flex-col items-end gap-3">
+                     <div className="flex items-center gap-6">
+                        <a href="https://github.com/F4tal1t/Poxil" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#df4c16] font-primary text-sm transition-colors uppercase tracking-widest flex items-center gap-2">
+                             <GithubIcon size={16} />
+                             <span>Source</span>
+                        </a>
+                        <a href="https://dibby.me" className="text-gray-500 hover:text-[#df4c16] font-primary text-sm transition-colors uppercase tracking-widest">Creators Portfolio</a>
+                     </div>
+                     <span className="text-gray-700 font-primary text-xs">2026 Poxil</span>
+                 </div>
             </div>
-      </section>
+        </div>
+      </footer>
 
     </div>
   );

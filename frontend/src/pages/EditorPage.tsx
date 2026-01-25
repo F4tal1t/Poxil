@@ -275,7 +275,7 @@ export default function EditorPage() {
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#151316] text-white">
-        <img src="/Loader.gif" alt="Loading..." className="h-16 w-16" />
+        <img src="/Loader.gif" alt="Loading..." className="h-32 w-32" />
       </div>
     );
   }
