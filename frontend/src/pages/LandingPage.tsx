@@ -237,13 +237,13 @@ export default function LandingPage() {
              <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-3 gap-8 items-center relative z-10">
                 
                 <div className="text-center md:text-left">
-                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
+                    <h2 className="font-emphasis text-5xl md:text-8xl leading-[0.85] text-white">
                         Sprite<br/>Animations
                     </h2>
                 </div>
 
                 <div className="flex justify-center py-8 md:py-0">
-                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
+                    <div className="w-64 h-64 md:w-80 md:h-80 relative flex items-center justify-center overflow-hidden">
                          <img src="/Loader.gif" className="w-full h-full object-cover opacity-80 mix-blend-screen" alt="Animation Loop" />
                     </div>
                 </div>
@@ -253,7 +253,7 @@ export default function LandingPage() {
                         <span className="text-white font-bold">Timeline Architecture </span> <br/>
                         Keyframe-based animation tools built directly into the editor for seamless motion.
                     </p>
-                    <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                    <p className="font-primary text-sm text-gray-300 uppercase tracking-widest">
                         Onion Skinning • Sprite Export
                     </p>
                 </div>
@@ -272,33 +272,31 @@ export default function LandingPage() {
                  
                  {/* Left: Title */}
                  <div className="text-center md:text-left">
-                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
+                    <h2 className="font-emphasis text-5xl md:text-8xl leading-[0.85] text-white">
                         Live<br/>Sync
                     </h2>
                  </div>
 
                  {/* Middle: GIF Placeholder */}
                  <div className="flex justify-center py-8 md:py-0">
-                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
-                         {/* Replace with Collaboration GIF */}
-                         <div className="absolute inset-0 bg-gradient-to-bl from-blue-500/10 to-transparent"></div>
+                    <div className="w-32 h-32 md:w-40 md:h-40 relative flex items-center justify-center overflow-hidden">
+                         <img src="/Connection.gif" className="w-full h-full object-cover opacity-80 mix-blend-screen" alt="Animation Loop" />
                     </div>
                 </div>
 
                  {/* Right: Description */}
-                 <div className="text-center md:text-left border-l border-[#333] pl-0 md:pl-8 border-none md:border-solid">
+                 <div className="text-center md:text-left pl-0 md:pl-8 border-none md:border-solid">
                      <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
-                        <span className="text-white font-bold">Multiplayer Engine.</span> 
+                        <span className="text-white font-bold">Multiplayer Engine </span> <br/>
                         Work on the same canvas with your team. Zero-latency updates powered by WebSockets.
                      </p>
-                     <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                     <p className="font-primary text-sm text-gray-300 uppercase tracking-widest">
                         Cursor Tracking • Chat Integration
                      </p>
                  </div>
              </div>
           </section>
 
-          {/* Feature: Auto Save */}
            <section className="min-h-screen flex flex-col items-center justify-center px-6 relative">
              {/* Background Overlay */}
              <div className="absolute inset-0 z-0 opacity-25 pointer-events-none mix-blend-screen">
@@ -309,26 +307,25 @@ export default function LandingPage() {
                 
                 {/* Left: Title */}
                 <div className="text-center md:text-left">
-                    <h2 className="font-emphasis text-5xl md:text-7xl leading-[0.85] text-white">
-                        Cloud<br/>State
+                    <h2 className="font-emphasis text-5xl md:text-8xl leading-[0.85] text-white">
+                        Auto<br/>Save
                     </h2>
                 </div>
 
                 {/* Middle: GIF Placeholder */}
                 <div className="flex justify-center py-8 md:py-0">
-                    <div className="w-64 h-64 md:w-80 md:h-80 relative bg-black/20 rounded-full border border-[#333] flex items-center justify-center overflow-hidden">
-                         {/* Replace with Cloud Save GIF */}
-                         <div className="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent"></div>
+                    <div className="w-48 h-48 md:w-60 md:h-60 relative flex items-center justify-center overflow-hidden">
+                         <img src="/CloudSave.png" className="w-full h-full object-cover opacity-80 mix-blend-screen" alt="Cloud Save Animation" />
                     </div>
                 </div>
 
                 {/* Right: Description */}
-                <div className="text-center md:text-left border-l border-[#333] pl-0 md:pl-8 border-none md:border-solid">
+                <div className="text-center md:text-left pl-0 md:pl-8 border-none md:border-solid">
                     <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
-                        <span className="text-white font-bold">Asynchronous Saving.</span> 
+                        <span className="text-white font-bold">Asynchronous Saving </span><br/>
                         Never lose a pixel. Background synchronization ensures your workspace is preserved across sessions and devices.
                     </p>
-                    <p className="font-primary text-sm text-gray-500 uppercase tracking-widest">
+                    <p className="font-primary text-sm text-gray-300 uppercase tracking-widest">
                         60s Interval • Local Cache
                     </p>
                 </div>
@@ -338,12 +335,12 @@ export default function LandingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="h-[60vh] bg-[#151316] relative overflow-hidden flex flex-col justify-end z-30">
+      <footer className="h-[35vh] bg-[#151316] relative overflow-hidden flex flex-col justify-end z-30">
 
         <div className="relative z-10 w-full flex flex-col md:flex-row items-end justify-between">
             
             {/* Left: POXIL Text - Attached to bottom left */}
-            <h1 className="font-emphasis text-[30vw] leading-[0.75] bg-gradient-to-b from-[#151316] to-gray-600 bg-clip-text text-transparent select-none opacity-90 ">
+            <h1 className="font-emphasis text-[20vw] leading-[0.75] bg-gradient-to-b from-[#151316] to-gray-600 bg-clip-text text-transparent select-none opacity-90 ">
                 Poxil
             </h1>
             
