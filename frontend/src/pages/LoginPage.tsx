@@ -32,9 +32,17 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        await signUp.email({ email, password, name });
+        const result = await signUp.email({ email, password, name });
+         if (result?.error) {
+            setError(result.error.message || "Sign up failed");
+            return;
+        }
       } else {
-        await signIn.email({ email, password });
+        const result = await signIn.email({ email, password });
+         if (result?.error) {
+            setError(result.error.message || "Sign in failed");
+            return;
+        }
       }
       navigate("/dashboard");
     } catch (err: any) {
@@ -130,13 +138,26 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="relative my-6">
+            <div className="relative my-6 text-center">
+                 <button
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError("");
+              }}
+              className="text-gray-400 hover:text-white transition-colors text-sm hover:underline mb-4 inline-block"
+            >
+              {isSignUp 
+                ? "Already have an account? Sign in" 
+                : "Don't have an account? Sign up"}
+            </button>
+            <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm font-primary">
                 <span className="px-2 bg-gray-850 text-gray-400">Or continue with</span>
               </div>
+            </div>
             </div>
 
             <button
@@ -171,20 +192,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="text-center pt-4">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError("");
-              }}
-              className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
-            >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"}
-            </button>
-          </div>
         </div>
       </div>
     </div>
