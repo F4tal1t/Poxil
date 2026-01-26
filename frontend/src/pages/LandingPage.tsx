@@ -169,7 +169,7 @@ export default function LandingPage() {
         
         {/* Vertical Buttons - Relocated beside Title */}
         <div ref={heroButtonsRef} className="absolute left-[calc(50%+22vw)] top-1/2 -translate-y-12 flex flex-col gap-4 z-50">
-            <Link to="/login" className="group relative">
+            <Link to="/editor/guest" className="group relative">
                 <button className="relative w-12 h-32 bg-transparent border border-[#333] rounded-sm flex flex-col items-center justify-center gap-3 hover:border-white transition-colors duration-300 cursor-pointer backdrop-blur-sm">
                     <span 
                         className="text-sm font-primary font-bold tracking-[0.2em] select-none" 
@@ -346,7 +346,7 @@ export default function LandingPage() {
             
             {/* Right: Actions & Links */}
             <div className="flex flex-col items-end gap-8 p-8 md:p-12 md:mb-8">
-                 <Link to="/login" 
+                 <Link to="/editor/guest" 
                     className="group flex items-center gap-2 px-8 py-4 bg-[#111] border border-[#333] rounded-full hover:bg-[#df4c16] hover:border-[#df4c16] hover:text-white transition-all duration-400">
                     <span className="font-primary text-sm tracking-wider uppercase text-gray-300 group-hover:text-white">Launch Editor</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">

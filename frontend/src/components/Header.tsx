@@ -12,9 +12,12 @@ import axios from "axios";
 
 interface HeaderProps {
   onNewFile?: () => void;
+  isGuest?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
 }
 
-export default function Header({ onNewFile }: HeaderProps) {
+export default function Header({ onNewFile, isGuest, onSave, isSaving }: HeaderProps) {
   const navigate = useNavigate();
   const { 
     currentProject,
@@ -31,7 +34,7 @@ export default function Header({ onNewFile }: HeaderProps) {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [projectName, setProjectName] = useState(currentProject?.name || "Untitled");
-  const [isSaving, setIsSaving] = useState(false);
+  const [isLocalSaving, setIsLocalSaving] = useState(false);
   
   // UI State
   const [toast, setToast] = useState<{message: string, type: ToastType} | null>(null);
@@ -106,6 +109,13 @@ export default function Header({ onNewFile }: HeaderProps) {
 
   const handleSaveClick = () => {
     if (!currentProject) return;
+    
+    // If Guest, delegate to onSave (which triggers Auth Dialog)
+    if (isGuest && onSave) {
+        onSave();
+        return;
+    }
+
     setProjectName(currentProject.name);
     setShowSaveDialog(true);
   };
@@ -117,7 +127,7 @@ export default function Header({ onNewFile }: HeaderProps) {
   const handleSaveConfirm = async () => {
     if (!currentProject) return;
     
-    setIsSaving(true);
+    setIsLocalSaving(true);
     try {
       const updatedProject = {
         ...currentProject,
@@ -158,7 +168,7 @@ export default function Header({ onNewFile }: HeaderProps) {
         showToast("Failed to save project. Please try again.", "error");
       }
     } finally {
-      setIsSaving(false);
+      setIsLocalSaving(false);
     }
   };
 
@@ -246,10 +256,10 @@ export default function Header({ onNewFile }: HeaderProps) {
                  </button>
                  <button 
                     onClick={handleSaveConfirm} 
-                    disabled={isSaving}
+                    disabled={isLocalSaving || isSaving}
                     className="px-4 py-2 bg-[#df4c16] text-white rounded hover:bg-[#c94514] disabled:opacity-50"
                  >
-                    {isSaving ? "Saving..." : "Save"}
+                    {isLocalSaving || isSaving ? "Saving..." : "Save"}
                  </button>
               </div>
            </div>

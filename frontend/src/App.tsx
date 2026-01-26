@@ -7,16 +7,54 @@ import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
 import LoadingScreen from "./components/LoadingScreen";
 
+// Helper to detect mobile
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+    return isMobile;
+};
+
+// Mobile blocking overlay
+function MobileOverlay() {
+    return (
+        <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex flex-col items-center justify-center p-8 text-center text-white">
+            <div className="mb-6">
+                <h1 className="text-4xl font-emphasis text-[#df4c16]" style={{ fontFamily: 'Retrogression, sans-serif' }}>Poxil</h1>
+            </div>
+            <h2 className="text-2xl font-bold mb-4 font-primary">Desktop Required</h2>
+            <p className="text-gray-400 max-w-md font-primary">
+                Poxil is a professional grade pixel-art editor designed for mouse and keyboard workflows.
+            </p>
+            <p className="mt-4 text-sm text-gray-500 font-primary">
+                Please access this URL from a desktop or laptop computer.
+            </p>
+        </div>
+    );
+}
+
 function App() {
   const { data: session, isPending } = useSession();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     document.fonts.ready.then(() => {
        setFontsLoaded(true);
     });
   }, []);
+
+  if (isMobile) {
+      return <MobileOverlay />;
+  }
+
 
   useEffect(() => {
      if (!isPending && fontsLoaded) {

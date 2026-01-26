@@ -1,8 +1,8 @@
-import { useState, useEffect , useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { useEditorStore } from "../lib/store";
-import { socket } from "../lib/socket"; // Import socket
+import { socket } from "../lib/socket";
 import { useSession } from "../lib/auth";
 import GuestNameDialog from "../components/GuestNameDialog";
 import Header from "../components/Header";
@@ -29,6 +29,8 @@ export default function EditorPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
   const [guestName, setGuestName] = useState<string | null>(null);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false); // For Save Prompt
+  const [isSaving, setIsSaving] = useState(false);
 
   const { setCurrentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
   const pixelSize = 16;
@@ -40,11 +42,55 @@ export default function EditorPage() {
      };
   }, []);
 
+  // Manual Save Handler
+  const handleManualSave = useCallback(async () => {
+    const state = useEditorStore.getState();
+    const currentProject = state.currentProject;
+    
+    // GUEST Check
+    if (!session?.user || projectId === 'guest') {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    // AUTH Saved
+    // Only check socket if we're not a guest and assume we're online
+    if (!socket.connected) {
+      alert("You appear to be offline. Cannot save to cloud.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+        await axios.put(`${import.meta.env.VITE_API_URL || "/api"}/projects/${projectId}`, {
+          frames: state.currentProject?.frames,
+          layers: state.currentProject?.layers,
+          width: currentProject?.width,
+          height: currentProject?.height
+        });
+        console.log("Manual save successful");
+    } catch (e) {
+        console.error("Save failed", e);
+        alert("Failed to save project.");
+    } finally {
+        setIsSaving(false);
+    }
+  }, [projectId, session]);
+
   // Global Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        // Ignore if input focused
-        if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) return;
+        // Ignore if input focused (except for Ctrl+S)
+        const isInput = ["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName);
+
+        // Ctrl+S (Save) - allow even if input is focused
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            handleManualSave();
+            return;
+        }
+
+        if (isInput) return;
 
         const store = useEditorStore.getState();
         const { undo, redo, setSelectedTool } = store;
@@ -76,22 +122,41 @@ export default function EditorPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleManualSave]);
 
   // Auto-Save Logic (Every 1 minute)
   useEffect(() => {
     const interval = setInterval(async () => {
+        const state = useEditorStore.getState();
+        const proj = state.currentProject;
+        
+        // GUEST AUTO-SAVE (Local Storage)
+        const isGuest = !session?.user || projectId === 'guest';
+        if (isGuest) {
+            if (proj) {
+                const projectData = { 
+                    ...proj, 
+                    frames: state.currentProject?.frames, 
+                    layers: state.currentProject?.layers,
+                    width: proj.width,
+                    height: proj.height
+                };
+                localStorage.setItem('poxil_guest_project', JSON.stringify(projectData));
+                console.log("Guest state saved locally.");
+            }
+            return;
+        }
+
         // "polling wont happen when the user is disconnected"
         if (!socket.connected) return;
         
-        const proj = useEditorStore.getState().currentProject;
         if (!projectId || !proj) return;
 
         try {
             console.log("Auto-saving project...");
             await axios.put(`/api/projects/${projectId}`, {
-                frames: proj.frames,
-                layers: proj.layers,
+                frames: state.currentProject?.frames,
+                layers: state.currentProject?.layers,
                 width: proj.width,
                 height: proj.height
             });
@@ -101,18 +166,78 @@ export default function EditorPage() {
     }, 60 * 1000); // 1 minute
 
     return () => clearInterval(interval);
-  }, [projectId]);
+  }, [projectId, session]);
 
   // Socket Connection
   useEffect(() => {
-    if (!projectId || isSessionLoading) return;
+    // Determine loading state of project logic
+    const loadGuestOrAuthProject = async () => {
+         // Guest Project Loading
+        if (projectId === 'guest') {
+             console.log("Loading guest session...");
+             const local = localStorage.getItem('poxil_guest_project');
+             if (local) {
+                 try {
+                     const data = JSON.parse(local);
+                     if (data) {
+                         useEditorStore.getState().setCurrentProject(data);
+                         setCanvasSize({ width: data.width, height: data.height });
+                     }
+                 } catch(e) {
+                     console.error("Failed to load local guest data", e);
+                 }
+             } else {
+                 // Initialize default new project for guest
+                 useEditorStore.getState().setCurrentProject({
+                     id: 'guest',
+                     name: 'Guest Project',
+                     width: 32, 
+                     height: 32,
+                     frames: [{ id: 'frame-1', layers: { 'layer-1': Array(32).fill(null).map(() => Array(32).fill("transparent")) }, duration: 100 }],
+                     layers: [{ id: 'layer-1', name: 'Layer 1', visible: true, locked: false, opacity: 100 }],
+                     createdAt: new Date().toISOString(),
+                     updatedAt: new Date().toISOString(),
+                     userId: 'guest',
+                     isPublic: false
+                 });
+                 // Ensure canvas size matches
+                 setCanvasSize({ width: 32, height: 32 });
+             }
+             setIsLoading(false);
+             return; 
+        }
 
+        // Authenticated Project Loading
+        try {
+            if (isSessionLoading) return;
+            
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || "/api"}/projects/${projectId}`);
+            useEditorStore.getState().setCurrentProject(response.data);
+            setCanvasSize({ width: response.data.width, height: response.data.height });
+            setIsLoading(false);
+
+        } catch (error) {
+            console.error("Failed to load project:", error);
+            setIsLoading(false);
+        }
+    };
+
+    if (projectId) {
+        loadGuestOrAuthProject();
+    }
+  }, [projectId, isSessionLoading]);
+
+
+  // Socket Connection Effect
+  useEffect(() => {
+    if (!projectId || isSessionLoading) return;
+    if (projectId === 'guest') return; 
+    
     // Determine identity
-    const hasIdentity = !!session?.user || !!guestName;
+    const hasIdentity = !!session?.user;
     
     if (!hasIdentity) {
-         setShowGuestDialog(true);
-         return;
+        return;
     }
     
     // We have an identity, ensure dialog is closed
@@ -123,7 +248,6 @@ export default function EditorPage() {
 
     socket.connect();
     
-    // Slight delay to ensure connection? No, connect() is async but emits are queued usually.
     socket.emit("join-project", { 
         projectId, 
         user: { name: userName, id: userId } 
@@ -148,68 +272,7 @@ export default function EditorPage() {
     };
   }, [projectId, session, guestName, isSessionLoading]);
 
-  useEffect(() => {
-    if (projectId) {
-      setShowDialog(false); // Don't show new canvas dialog if loading existing project
-      fetchProject();
-    }
-  }, [projectId]);
-
-  const fetchProject = async () => {
-    try {
-      setIsLoading(true);
-      const res = await axios.get(`/api/projects/${projectId}`);
-      const projectData = res.data;
-      
-      // Ensure frames are properly parsed if they come as string
-      if (typeof projectData.frames === 'string') {
-        try {
-          projectData.frames = JSON.parse(projectData.frames);
-        } catch (e) {
-          console.error("Failed to parse frames", e);
-          projectData.frames = [];
-        }
-      }
-
-      // Polyfill layers if missing (legacy projects) or empty
-      if ((!projectData.layers || projectData.layers.length === 0) && projectData.frames && projectData.frames.length > 0) {
-           const firstFrameLayers = projectData.frames[0].layers; 
-           const layerIds = firstFrameLayers ? Object.keys(firstFrameLayers) : ["layer-1"];
-           projectData.layers = layerIds.map((id: string, index: number) => ({
-               id,
-               name: `Layer ${index + 1}`,
-               visible: true,
-               locked: false,
-               opacity: 100
-           }));
-      }
-
-      // If frames are still empty or invalid, initialize defaults
-      if (!projectData.frames || projectData.frames.length === 0) {
-         const defaultLayerId = "layer-1";
-         projectData.frames = [{
-            id: "frame-1",
-            layers: {
-              [defaultLayerId]: Array(projectData.height).fill(null).map(() => Array(projectData.width).fill("transparent"))
-            },
-            duration: 100
-         }];
-         projectData.layers = [
-            { id: defaultLayerId, name: "Layer 1", visible: true, locked: false, opacity: 100 }
-         ];
-      }
-
-      setCanvasSize({ width: projectData.width, height: projectData.height });
-      useEditorStore.getState().setCurrentProject(projectData);
-    } catch (error) {
-      console.error("Failed to load project", error);
-      navigate("/dashboard"); // Redirect on error/unauthorized
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
+  // Handlers from the original file (restored)
   const handleCanvasCreate = (width: number, height: number) => {
     setCanvasSize({ width, height });
     setShowDialog(false);
@@ -286,7 +349,15 @@ export default function EditorPage() {
 
       <div className="h-screen flex flex-col bg-[#151316] text-white">
         <GuestNameDialog isOpen={showGuestDialog} onSubmit={setGuestName} />
-        <Header onNewFile={() => setShowDialog(true)} />
+        {/* Pass props to Header for Save Button state */}
+        {/* @ts-ignore */}
+        <Header 
+          isGuest={!session?.user || projectId === 'guest'} 
+          onSave={handleManualSave} 
+          isSaving={isSaving}
+          onNewFile={() => setShowDialog(true)}
+        />
+        
         <TopToolbar 
           zoom={zoom}
           onZoomIn={handleZoomIn}
@@ -330,6 +401,47 @@ export default function EditorPage() {
         </main>
 
         <Timeline />
+        
+        {/* Guest Save Dialog */}
+        {showAuthDialog && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+                <div className="bg-[#151316] border border-[#333] p-8 rounded-2xl max-w-sm w-full shadow-2xl text-center">
+                    <div className="w-16 h-16 bg-[#df4c16]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-[#df4c16]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold mb-2">Save to Cloud?</h2>
+                    <p className="text-gray-400 mb-8 text-sm leading-relaxed">
+                        Create a free account to save your projects permanently, access them from any device, and collaborate with friends.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                        <button 
+                            onClick={() => {
+                                // Save local state one last time before redirect
+                                const state = useEditorStore.getState();
+                                localStorage.setItem('poxil_guest_project', JSON.stringify({
+                                    frames: state.currentProject?.frames,
+                                    layers: state.currentProject?.layers,
+                                    width: state.currentProject?.width,
+                                    height: state.currentProject?.height
+                                }));
+                                navigate('/login'); 
+                            }}
+                            className="w-full py-3 bg-[#df4c16] text-white font-bold rounded-lg hover:bg-[#c93b0b] transition-colors"
+                        >
+                            Log In / Sign Up
+                        </button>
+                        <button 
+                            onClick={() => setShowAuthDialog(false)}
+                            className="w-full py-3 text-gray-500 hover:text-white transition-colors"
+                        >
+                            Continue as Guest
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
       </div>
     </>
   );

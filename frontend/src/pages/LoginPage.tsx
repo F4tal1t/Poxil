@@ -1,20 +1,20 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { signIn, signUp } from "../lib/auth";
 import { GoogleFill } from "akar-icons";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(null);
     
     // Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,22 +31,20 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      let result;
       if (isSignUp) {
-        const result = await signUp.email({ email, password, name });
-         if (result?.error) {
-            setError(result.error.message || "Sign up failed");
-            return;
-        }
+        result = await signUp.email({ email, password, name });
       } else {
-        const result = await signIn.email({ email, password });
-         if (result?.error) {
-            setError(result.error.message || "Sign in failed");
-            return;
-        }
+        result = await signIn.email({ email, password });
+      }
+
+      if (result?.error) {
+        setError(result.error.message || "Authentication failed");
+        return;
       }
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Authentication failed");
+      setError(err?.message || "Authentication failed");
     } finally {
       setIsLoading(false);
     }
@@ -138,26 +136,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="relative my-6 text-center">
-                 <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError("");
-              }}
-              className="text-gray-400 hover:text-white transition-colors text-sm hover:underline mb-4 inline-block"
-            >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"}
-            </button>
-            <div className="relative">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm font-primary">
                 <span className="px-2 bg-gray-850 text-gray-400">Or continue with</span>
               </div>
-            </div>
             </div>
 
             <button
@@ -191,6 +176,21 @@ export default function LoginPage() {
                 isSignUp ? "Sign Up" : "Sign In"
               )}
             </button>
+
+            <div className="text-center mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setError("");
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
+                >
+                  {isSignUp 
+                    ? "Already have an account? Sign in" 
+                    : "Don't have an account? Sign up"}
+                </button>
+            </div>
           </form>
         </div>
       </div>
