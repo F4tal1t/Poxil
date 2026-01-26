@@ -53,9 +53,15 @@ if (process.env.REDIS_URL) {
     const pubClient = createClient({ url: process.env.REDIS_URL });
     const subClient = pubClient.duplicate();
 
-    // Prevent crash on connection loss
-    pubClient.on("error", (err) => console.error("Redis Pub Client Error:", err));
-    subClient.on("error", (err) => console.error("Redis Sub Client Error:", err));
+    // Prevent crash on connection loss & suppress verbose logs in serverless
+    const handleRedisError = (err: any) => {
+        // Ignore "Socket closed unexpectedly" errors common in Vercel/Serverless
+        if (err?.message?.includes("Socket closed unexpectedly")) return;
+        console.error("Redis Client Error:", err);
+    };
+
+    pubClient.on("error", handleRedisError);
+    subClient.on("error", handleRedisError);
 
     Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
         io.adapter(createAdapter(pubClient, subClient));
