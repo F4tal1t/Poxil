@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Loader } from "akar-icons";
 
 interface LoadingScreenProps {
   isLoading: boolean;
