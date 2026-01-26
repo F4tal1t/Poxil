@@ -45,7 +45,7 @@ if (process.env.REDIS_URL) {
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: true, // Allow all origins for now to prevent Vercel domain mismatch
   credentials: true,
 }));
 app.use(express.json({ limit: "10mb" }));
