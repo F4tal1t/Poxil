@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { auth } from "../config/auth.js";
+import { getAuth } from "../config/auth.js";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -20,6 +20,7 @@ export const requireAuth = async (
   next: NextFunction
 ) => {
   try {
+    const auth = await getAuth();
     const session = await auth.api.getSession({ headers: req.headers });
     
     if (!session) {
@@ -40,6 +41,7 @@ export const optionalAuth = async (
   next: NextFunction
 ) => {
   try {
+    const auth = await getAuth();
     const session = await auth.api.getSession({ headers: req.headers });
     if (session) {
       req.user = session.user;

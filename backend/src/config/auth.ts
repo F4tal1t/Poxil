@@ -1,10 +1,16 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export const auth = betterAuth({
+let authInstance: any = null;
+
+export const getAuth = async () => {
+  if (authInstance) return authInstance;
+
+  const { betterAuth } = await import("better-auth");
+  const { prismaAdapter } = await import("better-auth/adapters/prisma");
+
+  authInstance = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins: [process.env.CLIENT_URL || "http://localhost:5173", "https://poxil.vercel.app"],
   debug: true, // Enable debugging to see SQL errors
@@ -38,6 +44,6 @@ export const auth = betterAuth({
     "http://localhost:5173",
     process.env.CLIENT_URL || "http://localhost:5173"
   ],
-});
-
-export type Auth = typeof auth;
+  });
+  return authInstance;
+};
