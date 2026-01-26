@@ -19,6 +19,12 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
+
+app.options('*', cors({
+  origin: true,
+  credentials: true,
+}));
+
 // Setup Socket.IO with potential Redis Adapter
 const io = new Server(httpServer, {
   cors: {
