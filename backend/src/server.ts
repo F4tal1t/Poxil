@@ -19,6 +19,18 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
+// Debug endpoint for deployment verification
+app.get("/api/debug", (req, res) => {
+    res.json({
+        status: "alive",
+        env: {
+            hasDb: !!process.env.DATABASE_URL,
+            hasRedis: !!process.env.REDIS_URL,
+            hasAuthSecret: !!process.env.BETTER_AUTH_SECRET,
+            nodeEnv: process.env.NODE_ENV
+        }
+    });
+});
 
 app.options('*', cors({
   origin: true,
