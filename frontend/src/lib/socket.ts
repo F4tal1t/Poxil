@@ -1,6 +1,8 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+// In Vercel, the backend is serverless paths on the same origin
+// or a specific URL provided by env
+const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 
 // Use Vercel-compatible polling by default if websocket fails
 export const socket = io(SOCKET_URL, {

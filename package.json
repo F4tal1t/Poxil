@@ -11,7 +11,7 @@
     "dev": "concurrently \"bun run server\" \"bun run client\"",
     "client": "cd frontend && bun run dev",
     "server": "cd backend && bun run dev",
-    "build": "cd frontend && bun install && bun run build"
+    "build": "cd backend && bunx prisma generate && cd ../frontend && bun install && bun run build"
   },
   "keywords": [
     "pixel-art",
