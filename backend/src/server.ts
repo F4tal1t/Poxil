@@ -7,7 +7,6 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-import { toNodeHandler } from "better-auth/node";
 import { auth } from "./config/auth.js";
 import { logger } from "./config/logger.js";
 import { register, activeConnections, pixelUpdates } from "./config/metrics.js";
@@ -83,7 +82,15 @@ app.get("/metrics", async (req, res) => {
 });
 
 // Better-auth routes
-app.all("/api/auth/*", toNodeHandler(auth));
+app.all("/api/auth/*", async (req, res, next) => {
+    try {
+        const { toNodeHandler } = await import("better-auth/node");
+        const handler = toNodeHandler(auth);
+        return handler(req, res, next);
+    } catch (e) {
+        next(e);
+    }
+});
 
 // API routes
 app.use("/api/projects", projectRoutes);
