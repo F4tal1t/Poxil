@@ -15,9 +15,12 @@ interface HeaderProps {
   isGuest?: boolean;
   onSave?: () => void;
   isSaving?: boolean;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onFitToScreen?: () => void;
 }
 
-export default function Header({ onNewFile, isGuest, onSave, isSaving }: HeaderProps) {
+export default function Header({ onNewFile, isGuest, onSave, isSaving, onZoomIn, onZoomOut, onFitToScreen }: HeaderProps) {
   const navigate = useNavigate();
   const { 
     currentProject,
@@ -297,9 +300,9 @@ export default function Header({ onNewFile, isGuest, onSave, isSaving }: HeaderP
              <MenuDropdown 
                 label="View" 
                 items={[
-                   { label: "Zoom In", onClick: () => {} },
-                   { label: "Zoom Out", onClick: () => {} },
-                   { label: "Fit to Screen", onClick: () => {} },
+                   { label: "Zoom In", onClick: onZoomIn || (() => {}) },
+                   { label: "Zoom Out", onClick: onZoomOut || (() => {}) },
+                   { label: "Fit to Screen", onClick: onFitToScreen || (() => {}) },
                 ]} 
              />
              

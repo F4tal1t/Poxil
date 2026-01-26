@@ -182,6 +182,7 @@ export default function EditorPage() {
                      if (data) {
                          useEditorStore.getState().setCurrentProject(data);
                          setCanvasSize({ width: data.width, height: data.height });
+                         setShowDialog(false);
                      }
                  } catch(e) {
                      console.error("Failed to load local guest data", e);
@@ -214,6 +215,7 @@ export default function EditorPage() {
             const response = await axios.get(`${import.meta.env.VITE_API_URL || "/api"}/projects/${projectId}`);
             useEditorStore.getState().setCurrentProject(response.data);
             setCanvasSize({ width: response.data.width, height: response.data.height });
+            setShowDialog(false);
             setIsLoading(false);
 
         } catch (error) {
@@ -356,6 +358,9 @@ export default function EditorPage() {
           onSave={handleManualSave} 
           isSaving={isSaving}
           onNewFile={() => setShowDialog(true)}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onFitToScreen={handleZoomReset}
         />
         
         <TopToolbar 
