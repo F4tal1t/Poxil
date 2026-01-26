@@ -465,7 +465,6 @@ export default function InteractiveCanvas({
         break;
       case "fill":
         // Flood fill implementation would go here
-        pushToHistory(); // Save state before fill
         floodFill(coords.x, coords.y, color);
         break;
     }
@@ -591,7 +590,7 @@ export default function InteractiveCanvas({
     
     if (targetColor === fillColor) return;
     
-    const newLayerGrid = layerGrid.map(row => [...row]);
+    const pointsToFill: { x: number; y: number; color: string }[] = [];
     const stack = [[startX, startY]];
     const visited = new Set<string>();
     
@@ -601,30 +600,17 @@ export default function InteractiveCanvas({
       
       if (visited.has(key) || x < 0 || x >= width || y < 0 || y >= height) continue;
       
-      const currentColor = newLayerGrid[y]?.[x] || "transparent";
+      const currentColor = layerGrid[y]?.[x] || "transparent";
       if (currentColor !== targetColor) continue;
       
       visited.add(key);
-      newLayerGrid[y][x] = fillColor;
+      pointsToFill.push({ x, y, color: fillColor });
       
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
     }
     
-    // Update the active layer for the frame
-    const newFrames = [...currentProject.frames];
-    newFrames[currentFrame] = {
-      ...newFrames[currentFrame],
-      layers: {
-        ...newFrames[currentFrame].layers,
-        [activeLayerId]: newLayerGrid
-      }
-    };
-    
-    setCurrentProject({
-      ...currentProject,
-      frames: newFrames
-    });
-  }, [currentProject, currentFrame, activeLayerId, width, height, setCurrentProject]);
+    drawPixels(pointsToFill);
+  }, [currentProject, currentFrame, activeLayerId, width, height, drawPixels]);
 
   // Prevent context menu on right click
   const handleContextMenu = (e: React.MouseEvent) => {

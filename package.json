@@ -1,18 +1,18 @@
 {
   "name": "poxil",
   "version": "1.0.0",
-  "description": "Pixel Art and Animation Creator - A collaborative web-based tool for creating retro-style pixel art and animations",
+  "description": "Poxil- A collaborative web-based tool for creating retro-style pixel art and animations",
   "private": true,
   "workspaces": [
     "frontend",
     "backend"
   ],
   "scripts": {
-    "dev": "concurrently \"bun run dev:frontend\" \"bun run dev:backend\"",
-    "dev:frontend": "bun --filter frontend dev",
-    "dev:backend": "bun --filter backend dev",
-    "build": "bun --filter frontend build && bun --filter backend build",
-    "install:all": "bun install"
+    "dev": "concurrently \"bun run server\" \"bun run client\"",
+    "client": "cd frontend && bun run dev",
+    "server": "cd backend && bun run dev",
+    "build": "cd frontend && bun install && bun run build",
+    "postinstall": "cd backend && bun install && bunx prisma generate"
   },
   "keywords": [
     "pixel-art",
