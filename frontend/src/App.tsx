@@ -1,39 +1,57 @@
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSession } from "./lib/auth";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
+import LoadingScreen from "./components/LoadingScreen";
 
 function App() {
   const { data: session, isPending } = useSession();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
 
-  if (isPending) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-850 text-white">
-        <img src="/Loader.gif" alt="Loading..." className="h-32 w-32" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    document.fonts.ready.then(() => {
+       setFontsLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+     if (!isPending && fontsLoaded) {
+         // Small delay to ensure the new route is painted before lifting the curtain
+         const timer = setTimeout(() => {
+             setShowLoader(false);
+         }, 800); 
+         return () => clearTimeout(timer);
+     }
+  }, [isPending, fontsLoaded]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/login"
-          element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
-        />
-        <Route
-          path="/dashboard"
-          element={session ? <DashboardPage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/editor/:projectId"
-          element={session ? <EditorPage /> : <Navigate to="/login" />}
-        />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <LoadingScreen isLoading={showLoader} />
+      
+      {!isPending && (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/login"
+              element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
+            />
+            <Route
+              path="/dashboard"
+              element={session ? <DashboardPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/editor/:projectId"
+              element={session ? <EditorPage /> : <Navigate to="/login" />}
+            />
+          </Routes>
+        </BrowserRouter>
+      )}
+    </>
   );
 }
 
