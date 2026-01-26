@@ -17,6 +17,9 @@ dotenv.config();
 const app: express.Application = express();
 const httpServer = createServer(app);
 
+// Trust Proxy for Vercel
+app.set("trust proxy", 1);
+
 // Debug endpoint for deployment verification
 app.get("/api/debug", (_req, res) => {
     res.json({
@@ -49,6 +52,10 @@ const io = new Server(httpServer, {
 if (process.env.REDIS_URL) {
     const pubClient = createClient({ url: process.env.REDIS_URL });
     const subClient = pubClient.duplicate();
+
+    // Prevent crash on connection loss
+    pubClient.on("error", (err) => console.error("Redis Pub Client Error:", err));
+    subClient.on("error", (err) => console.error("Redis Sub Client Error:", err));
 
     Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
         io.adapter(createAdapter(pubClient, subClient));

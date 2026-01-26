@@ -28,7 +28,7 @@ export default function LoadingScreen({ isLoading }: LoadingScreenProps) {
     >
       <div className="relative">
          {/* Using the Loader GIF as defined in favicon/requirements */}
-         <img src="/Loader.gif" alt="Loading..." className="w-24 h-24 object-contain" />
+         <img src="/Loader.gif" alt="Loading..." className="w-48 h-48 object-contain" />
          
       </div>
     </div>
