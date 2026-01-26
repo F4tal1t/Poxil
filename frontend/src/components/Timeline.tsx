@@ -36,7 +36,7 @@ export default function Timeline({ className = "" }: TimelineProps) {
   }, [currentFrame]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isPlaying && currentProject) {
       interval = setInterval(() => {
         setCurrentFrame((currentFrame + 1) % currentProject.frames.length);
@@ -68,7 +68,7 @@ export default function Timeline({ className = "" }: TimelineProps) {
               }`}
               title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
-               {isPlaying ? <Pause size={12} variant="filled" /> : <Play size={12} variant="filled" />}
+               {isPlaying ? <Pause size={12} /> : <Play size={12} />}
             </button>
 
             <div className="flex items-center gap-1 bg-[#2a2630] rounded px-1.5 py-0.5">

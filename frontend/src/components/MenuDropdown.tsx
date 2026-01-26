@@ -5,6 +5,7 @@ interface MenuItem {
   onClick: () => void;
   shortcut?: string;
   danger?: boolean;
+  disabled?: boolean;
 }
 
 interface MenuDropdownProps {
@@ -42,16 +43,21 @@ export default function MenuDropdown({ label, items }: MenuDropdownProps) {
           {items.map((item, index) => (
             <button
               key={index}
+              disabled={item.disabled}
               onClick={() => {
-                item.onClick();
-                setIsOpen(false);
+                if (!item.disabled) {
+                  item.onClick();
+                  setIsOpen(false);
+                }
               }}
-              className={`w-full text-left px-4 py-2 text-xs hover:bg-[#3d3842] flex items-center justify-between ${
-                item.danger ? "text-red-400" : "text-gray-200"
+              className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between ${
+                item.disabled 
+                  ? "text-gray-600 cursor-not-allowed" 
+                  : item.danger ? "text-red-400 hover:bg-[#3d3842]" : "text-gray-200 hover:bg-[#3d3842]"
               }`}
             >
               <span>{item.label}</span>
-              {item.shortcut && <span className="text-gray-500 opacity-70 ml-2">{item.shortcut}</span>}
+              {item.shortcut && <span className={`opacity-70 ml-2 ${item.disabled ? "text-gray-700" : "text-gray-500"}`}>{item.shortcut}</span>}
             </button>
           ))}
         </div>
