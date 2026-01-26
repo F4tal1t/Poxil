@@ -8,18 +8,17 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { getAuth } from "./config/auth.js";
-import { logger } from "./config/logger.js";
 import { register, activeConnections, pixelUpdates } from "./config/metrics.js";
 import { metricsMiddleware } from "./middleware/metrics.js";
 import projectRoutes from "./routes/projectRoutes.js";
 
 dotenv.config();
 
-const app = express();
+const app: express.Application = express();
 const httpServer = createServer(app);
 
 // Debug endpoint for deployment verification
-app.get("/api/debug", (req, res) => {
+app.get("/api/debug", (_req, res) => {
     res.json({
         status: "alive",
         env: {
@@ -53,9 +52,9 @@ if (process.env.REDIS_URL) {
 
     Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
         io.adapter(createAdapter(pubClient, subClient));
-        logger.info("Redis Adapter connected");
+        console.log("Redis Adapter connected");
     }).catch(err => {
-        logger.error("Redis connection failed", err);
+        console.error("Redis connection failed", err);
     });
 }
 
@@ -76,7 +75,7 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // Prometheus metrics endpoint
-app.get("/metrics", async (req, res) => {
+app.get("/metrics", async (_req, res) => {
   res.set("Content-Type", register.contentType);
   res.end(await register.metrics());
 });
@@ -87,7 +86,7 @@ app.all("/api/auth/*", async (req, res, next) => {
         const { toNodeHandler } = await import("better-auth/node");
         const auth = await getAuth();
         const handler = toNodeHandler(auth);
-        return handler(req, res, next);
+        return handler(req, res);
     } catch (e) {
         next(e);
     }
@@ -97,14 +96,14 @@ app.all("/api/auth/*", async (req, res, next) => {
 app.use("/api/projects", projectRoutes);
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
 // Socket.io for real-time collaboration
 io.on("connection", (socket) => {
   activeConnections.inc();
-  logger.info(`Client connected: ${socket.id}`);
+  console.log(`Client connected: ${socket.id}`);
 
   socket.on("join-project", (data: string | { projectId: string, user?: { id?: string, name: string } }) => {
     let projectId: string;
@@ -126,7 +125,7 @@ io.on("connection", (socket) => {
        user 
     });
     
-    logger.info(`User ${user.name} (${socket.id}) joined project ${projectId}`);
+    console.log(`User ${user.name} (${socket.id}) joined project ${projectId}`);
   });
 
   socket.on("pixel-update", (data: { projectId: string; layerId: string; frameIndex: number; x: number; y: number; color: string } | { projectId: string; layerId: string; frameIndex: number; updates: { x: number; y: number; color: string }[] }) => {
@@ -150,7 +149,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     activeConnections.dec();
-    logger.info(`Client disconnected: ${socket.id}`);
+    console.log(`Client disconnected: ${socket.id}`);
   });
 });
 
@@ -158,7 +157,7 @@ const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== 'production') {
   httpServer.listen(PORT, () => {
-    logger.info(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
