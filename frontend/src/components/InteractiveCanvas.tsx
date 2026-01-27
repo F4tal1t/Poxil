@@ -96,6 +96,10 @@ export default function InteractiveCanvas({
   const [selection, setSelection] = useState<{ start: {x: number, y: number}, end: {x: number, y: number} } | null>(null);
   const [mousePos, setMousePos] = useState<{x: number, y: number} | null>(null);
   const [cursorPixel, setCursorPixel] = useState<{x: number, y: number} | null>(null);
+  const [moveSnapshot, setMoveSnapshot] = useState<{
+      pixels: { x: number, y: number, color: string }[],
+      sourceArea: { minX: number, minY: number, maxX: number, maxY: number },
+  } | null>(null);
   
   const { 
     currentFrame,
@@ -114,6 +118,35 @@ export default function InteractiveCanvas({
     showOnionSkin,
     pushToHistory
   } = useEditorStore();
+
+  // Capture pixels from selection for moving
+  const captureSelection = useCallback(() => {
+     if(!selection || !currentProject || !activeLayerId) return;
+     const frame = currentProject.frames[currentFrame];
+     const grid = frame.layers[activeLayerId];
+     if(!grid) return;
+
+     const minX = Math.min(selection.start.x, selection.end.x);
+     const maxX = Math.max(selection.start.x, selection.end.x);
+     const minY = Math.min(selection.start.y, selection.end.y);
+     const maxY = Math.max(selection.start.y, selection.end.y);
+
+     const pixels: {x: number, y: number, color: string}[] = [];
+     
+     for(let y = minY; y <= maxY; y++) {
+         for(let x = minX; x <= maxX; x++) {
+             const color = grid[y]?.[x];
+             if(color && color !== 'transparent') {
+                 pixels.push({ x, y, color });
+             }
+         }
+     }
+     
+     setMoveSnapshot({
+         pixels,
+         sourceArea: { minX, minY, maxX, maxY }
+     });
+  }, [selection, currentProject, currentFrame, activeLayerId]);
 
   // Render canvas
   useEffect(() => {
@@ -167,6 +200,14 @@ export default function InteractiveCanvas({
                 for (let x = 0; x < width; x++) {
                     const color = grid[y]?.[x] || "transparent";
                     if (color !== "transparent") {
+                        // Skip if moving logic
+                        if (moveSnapshot && layer.id === activeLayerId &&
+                            x >= moveSnapshot.sourceArea.minX && x <= moveSnapshot.sourceArea.maxX &&
+                            y >= moveSnapshot.sourceArea.minY && y <= moveSnapshot.sourceArea.maxY
+                        ) {
+                             continue;
+                        }
+
                         ctx.fillStyle = color;
                         ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
                     }
@@ -174,6 +215,21 @@ export default function InteractiveCanvas({
                 }
                 ctx.globalAlpha = 1.0;
             });
+            
+            // Draw Moving Snapshot
+            if (moveSnapshot && selection) {
+                const curMinX = Math.min(selection.start.x, selection.end.x);
+                const curMinY = Math.min(selection.start.y, selection.end.y);
+                const dx = curMinX - moveSnapshot.sourceArea.minX;
+                const dy = curMinY - moveSnapshot.sourceArea.minY;
+                
+                moveSnapshot.pixels.forEach(p => {
+                    const nx = p.x + dx;
+                    const ny = p.y + dy;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(offsetX + nx * pixelSize, offsetY + ny * pixelSize, pixelSize, pixelSize);
+                });
+            }
         }
 
         // Draw grid
@@ -288,7 +344,7 @@ export default function InteractiveCanvas({
         });
       }
     }
-  }, [width, height, pixelSize, currentProject, currentFrame, isDrawing, startPos, cursorPixel, selectedTool, primaryColor, selection]);
+  }, [width, height, pixelSize, currentProject, currentFrame, isDrawing, startPos, cursorPixel, selectedTool, primaryColor, selection, moveSnapshot]);
 
   useEffect(() => {
     // drawCanvas(); // function does not exist, rendering is handled by the effect above
@@ -443,7 +499,22 @@ export default function InteractiveCanvas({
         setIsDrawing(false);
         break;
       case "selection":
-        setSelection(null);
+        if (selection) {
+             const minX = Math.min(selection.start.x, selection.end.x);
+             const maxX = Math.max(selection.start.x, selection.end.x);
+             const minY = Math.min(selection.start.y, selection.end.y);
+             const maxY = Math.max(selection.start.y, selection.end.y);
+             const inside = coords.x >= minX && coords.x <= maxX && coords.y >= minY && coords.y <= maxY;
+             
+             if (inside) {
+                 pushToHistory();
+                 captureSelection();
+             } else {
+                 setSelection(null);
+             }
+        } else {
+            setSelection(null);
+        }
         break;
       case "pencil":
         drawWithBrush(coords.x, coords.y, color);
@@ -504,7 +575,8 @@ export default function InteractiveCanvas({
              // If cursor was inside selection when drag started, we move the selection
              // Note: startPos is fixed at MouseDown. cursorPixel changes.
              // We need to know if startPos was inside selection.
-             const startInSelection = startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY;
+             // If we have a moveSnapshot, we are definitely moving regardless of where startPos was (e.g. handle drag)
+             const startInSelection = (moveSnapshot !== null) || (startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY);
              
              if (startInSelection) {
                  // Move mode
@@ -513,7 +585,7 @@ export default function InteractiveCanvas({
                         start: { x: selection.start.x + dx, y: selection.start.y + dy },
                         end: { x: selection.end.x + dx, y: selection.end.y + dy }
                      });
-                     setStartPos(coords); // Update start to avoid exponential movement
+                     setStartPos(coords); // Update start
                  }
              } else {
                  // New selection mode handled in Draw Shape Preview usually?
@@ -537,6 +609,27 @@ export default function InteractiveCanvas({
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
+    if (moveSnapshot && selection && activeLayerId) {
+        const curMinX = Math.min(selection.start.x, selection.end.x);
+        const curMinY = Math.min(selection.start.y, selection.end.y);
+        const dx = curMinX - moveSnapshot.sourceArea.minX;
+        const dy = curMinY - moveSnapshot.sourceArea.minY;
+
+        if (dx !== 0 || dy !== 0) {
+            const updates: {x: number, y: number, color: string}[] = [];
+            // Clear old
+            moveSnapshot.pixels.forEach(p => {
+                updates.push({ x: p.x, y: p.y, color: "transparent" });
+            });
+            // Set new
+            moveSnapshot.pixels.forEach(p => {
+                 updates.push({ x: p.x + dx, y: p.y + dy, color: p.color });
+            });
+            drawPixels(updates);
+        }
+        setMoveSnapshot(null);
+    }
+
     if (isDrawing && startPos && cursorPixel) {
       const toolType = selectedTool.type;
 
@@ -547,7 +640,7 @@ export default function InteractiveCanvas({
              const maxX = Math.max(selection.start.x, selection.end.x);
              const minY = Math.min(selection.start.y, selection.end.y);
              const maxY = Math.max(selection.start.y, selection.end.y);
-             const startInSelection = startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY;
+             const startInSelection = (moveSnapshot !== null) || (startPos.x >= minX && startPos.x <= maxX && startPos.y >= minY && startPos.y <= maxY);
              
              if (!startInSelection) {
                  // Created new selection
@@ -665,34 +758,28 @@ export default function InteractiveCanvas({
              onMouseDown={(e) => {
                  e.stopPropagation(); 
                  e.preventDefault();
-                 // Hacky way to trigger move mode: simulated mousedown on the selection center
-                 const centerX = (selection.start.x + selection.end.x) / 2;
-                 const centerY = (selection.start.y + selection.end.y) / 2;
                  
-                 // We manually set state to start dragging the selection
-                 // But simply starting drag moves the selection frame, not pixels yet without complex logic
-                 // For now, this handle acts as a visual grip that allows dragging the frame effectively
-                 // by leveraging the existing "startInSelection" logic if we fake it?
-                 // No, better to just let user drag inside the box.
-                 
-                 // However, user requested a button. Let's make this button trigger a "Cut & Move" action?
-                 // Or just be a grip. 
-                 
-                 // Since the user asked for a "button to move around", let's make dragging THIS button move the selection.
-                 // We need to inject into the existing mouse flow.
-                 const rect = canvasRef.current?.getBoundingClientRect();
-                 if(rect) {
-                     // We can't easily inject into React state from here without duplicating logic.
-                     // Instead, let's just make this button purely visual for now or bind it to a specific action
-                     // For "moving the selected part", usually dragging INSIDE the selection is enough.
-                     // I will attach the handleMouseDown of the canvas to this div, so dragging it acts like dragging the canvas
-                     // but we need to ensure coordinate math works.
+                 captureSelection();
+                 pushToHistory();
+
+                 const canvas = canvasRef.current;
+                 if(canvas) {
+                     const rect = canvas.getBoundingClientRect();
+                     const mouseX = e.clientX - rect.left;
+                     const mouseY = e.clientY - rect.top;
+                     // Same logic as getPixelCoords
+                     const logicalX = mouseX / zoom;
+                     const logicalY = mouseY / zoom;
+                     let x = Math.floor(logicalX / pixelSize);
+                     let y = Math.floor(logicalY / pixelSize);
+
+                     if (tileMode) {
+                        x = x % width;
+                        y = y % height;
+                     }
                      
-                     // Actually, if we just pass the event, the target is the div, not canvas.
-                     // Let's manually trigger the state change
                      setIsDrawing(true);
-                     setStartPos({ x: Math.round(centerX), y: Math.round(centerY) }); 
-                     // This sets start pos to center of selection, so it THINKS we clicked inside.
+                     setStartPos({ x, y }); 
                  }
             }}
           >

@@ -51,11 +51,6 @@ function App() {
     });
   }, []);
 
-  if (isMobile) {
-      return <MobileOverlay />;
-  }
-
-
   useEffect(() => {
      if (!isPending && fontsLoaded) {
          // Small delay to ensure the new route is painted before lifting the curtain
@@ -65,6 +60,10 @@ function App() {
          return () => clearTimeout(timer);
      }
   }, [isPending, fontsLoaded]);
+
+  if (isMobile) {
+      return <MobileOverlay />;
+  }
 
   return (
     <>
