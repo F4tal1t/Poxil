@@ -1,4 +1,6 @@
-# Poxil
+
+<img width="792" height="198" alt="Dibby (6)" src="https://github.com/user-attachments/assets/76714414-5747-4675-92d9-376810f8b07d" />
+<br/><br/>
 
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -10,7 +12,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
 
-Poxil is a professional-grade, web-based pixel art editor designed for desktop workflows. It combines a robust set of drawing tools with real-time collaboration features, allowing multiple users to edit the same canvas simultaneously.
+Poxil is a web-based pixel art editor designed for desktop workflows. It combines a robust set of drawing tools with real-time collaboration features, allowing multiple users to edit the same canvas simultaneously.
 
 ## Features
 
