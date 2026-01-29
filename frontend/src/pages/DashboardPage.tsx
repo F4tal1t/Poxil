@@ -27,6 +27,7 @@ export default function DashboardPage() {
 
   const fetchProjects = async () => {
     try {
+      console.log("Fetching projects from:", axios.defaults.baseURL);
       const res = await axios.get("/api/projects");
       if (Array.isArray(res.data)) {
         setProjects(res.data);

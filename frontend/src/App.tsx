@@ -10,7 +10,8 @@ import LoadingScreen from "./components/LoadingScreen";
 
 // Configure Axios Global Defaults
 // Normalize API URL: Remove trailing slash and /api suffix to prevent double segments
-const apiUrl = import.meta.env.VITE_API_URL || "";
+// Fallback to absolute URL if env is missing (for debugging)
+const apiUrl = import.meta.env.VITE_API_URL || "https://poxil.onrender.com"; 
 console.log("---------------------------------------------------");
 console.log("frontend config: VITE_API_URL =", apiUrl);
 console.log("---------------------------------------------------");
