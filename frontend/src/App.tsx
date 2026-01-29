@@ -46,7 +46,11 @@ function App() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    document.fonts.ready.then(() => {
+    // Wait for fonts or timeout after 2 seconds to prevent infinite loading
+    Promise.race([
+      document.fonts.ready,
+      new Promise((resolve) => setTimeout(resolve, 2000))
+    ]).then(() => {
        setFontsLoaded(true);
     });
   }, []);
