@@ -84,7 +84,7 @@ function App() {
     <>
       <LoadingScreen isLoading={showLoader} />
       
-      {!isPending && (
+      {(!isPending || !showLoader) && (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
