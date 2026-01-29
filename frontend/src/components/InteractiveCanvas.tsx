@@ -420,7 +420,8 @@ export default function InteractiveCanvas({
   }, [width, height, currentProject, currentFrame, updatePixels, activeLayerId]);
 
   // Draw with brush size (square brush) and mirror support
-  const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {    // console.log("DrawWithBrush called", { x: centerX, y: centerY, color, tool: selectedTool.type });    const brushSize = selectedTool.size || 1;
+  const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {
+    const brushSize = selectedTool.size || 1;
     const halfSize = Math.floor(brushSize / 2);
     const pointsToDraw: { x: number; y: number; color: string }[] = [];
 
