@@ -218,8 +218,29 @@ export default function EditorPage() {
             if (isSessionLoading) return;
             
             const response = await axios.get(`/api/projects/${projectId}`);
-            useEditorStore.getState().setCurrentProject(response.data);
-            setCanvasSize({ width: response.data.width, height: response.data.height });
+            let project = response.data;
+
+            // CLIENT-SIDE FIX: Hydrate Empty Projects (Backwards Compatibility)
+            // If the project was created with the previous bug (empty frames/layers), fix it in memory
+            if (!project.layers || project.layers.length === 0 || !project.frames || project.frames.length === 0) {
+                 console.warn("Project loaded with empty structure. Hydrating default layers...");
+                 const w = project.width || 32;
+                 const h = project.height || 32;
+                 const layerId = "layer-1";
+                 const createGrid = (w: number, h: number) => Array(h).fill(null).map(() => Array(w).fill("transparent"));
+                 
+                 project.layers = [{ id: layerId, name: "Layer 1", visible: true, locked: false, opacity: 100 }];
+                 project.frames = [{
+                    id: "frame-1",
+                    layers: {
+                        [layerId]: createGrid(w, h)
+                    },
+                    duration: 100
+                 }];
+            }
+
+            useEditorStore.getState().setCurrentProject(project);
+            setCanvasSize({ width: project.width, height: project.height });
             setShowDialog(false);
             setIsLoading(false);
 

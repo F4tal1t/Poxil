@@ -4,16 +4,32 @@ import { prisma } from "../config/database.js";
 
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, width, height, frames, layers } = req.body;
+    // Extract variables from body first to fix scope errors
+    const { name, description, frames, layers } = req.body;
+    const width = req.body.width || 32;
+    const height = req.body.height || 32;
     
+    // Create initial Grid with transparent strings
+    const createGrid = (w: number, h: number) => Array(h).fill(null).map(() => Array(w).fill("transparent"));
+    
+    const layerId = "layer-1";
+    const initialLayers = [{ id: layerId, name: "Layer 1", visible: true, locked: false, opacity: 100 }];
+    const initialFrames = [{
+        id: "frame-1",
+        layers: {
+             [layerId]: createGrid(width, height)
+        },
+        duration: 100
+    }];
+
     const project = await prisma.project.create({
       data: {
         name,
         description,
-        width: width || 32,
-        height: height || 32,
-        frames: frames || [], // Save frames if provided
-        layers: layers || [], // Save layers if provided
+        width,
+        height,
+        frames: frames || initialFrames, 
+        layers: layers || initialLayers,
         userId: req.user!.id,
       },
     });

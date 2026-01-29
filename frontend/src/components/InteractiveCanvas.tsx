@@ -174,27 +174,42 @@ export default function InteractiveCanvas({
             const frame = currentProject.frames[currentFrame];
             const layers = currentProject.layers || [];
             
-            // Debug log every few frames if needed, but for now just defensive coding
-            // console.log("Rendering Frame:", currentFrame, "Layer Count:", layers.length);
+            // Enable Debug logging
+            // console.log("Rendering Frame details:", { 
+            //    frameId: frame?.id, 
+            //    layerCount: layers.length,
+            //    activeLayer: activeLayerId,
+            //    firstLayerGridSnippet: layers[0] ? frame.layers[layers[0].id]?.[0]?.slice(0,5) : 'N/A'
+            // });
 
             [...layers].reverse().forEach(layer => {
-                if (!layer.visible) return;
+                if (!layer.visible) {
+                    // console.log("Layer invisible:", layer.id);
+                    return;
+                }
                 
                 // Defensive access
                 const grid = frame?.layers?.[layer.id];
                 
-                if (!grid) return;
+                if (!grid) {
+                   console.warn("Grid missing for layer:", layer.id);
+                   return;
+                }
                 
                 ctx.globalAlpha = layer.opacity / 100;
                 
+                let pixelsDrawn = 0;
                 for (let y = 0; y < height; y++) {
                   if (!grid[y]) continue; // Safety check for row existence
                   for (let x = 0; x < width; x++) {
                     const color = grid[y][x];
                     if (color && color !== "transparent") {
-                        // Debug pixel drawing
-                        // console.log(`Drawing pixel at ${x},${y}: ${color}`);
-                        
+                        // Debug pixel drawing - verify coordinates are within expected range
+                        if(pixelsDrawn === 0) {
+                           console.log(`First pixel found at ${x},${y} color: ${color}`);
+                        }
+                        pixelsDrawn++;
+
                         // Skip if moving logic
                         if (moveSnapshot && layer.id === activeLayerId &&
                             x >= moveSnapshot.sourceArea.minX && x <= moveSnapshot.sourceArea.maxX &&
@@ -208,6 +223,11 @@ export default function InteractiveCanvas({
                     }
                   }
                 }
+                
+                if (pixelsDrawn > 0) {
+                   // console.log(`Layer ${layer.id}: Drew ${pixelsDrawn} pixels`);
+                }
+
                 ctx.globalAlpha = 1.0;
             });
             
@@ -362,6 +382,8 @@ export default function InteractiveCanvas({
     // Convert to pixel coordinates
     let x = Math.floor(logicalX / pixelSize);
     let y = Math.floor(logicalY / pixelSize);
+    
+    // console.log("Mouse Pos:", { clientX: e.clientX, clientY: e.clientY, logicalX, logicalY, x, y });
 
     // If tile mode is on, we map clicks on extended area back to original coordinates
     if (tileMode) {
@@ -398,8 +420,7 @@ export default function InteractiveCanvas({
   }, [width, height, currentProject, currentFrame, updatePixels, activeLayerId]);
 
   // Draw with brush size (square brush) and mirror support
-  const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {
-    const brushSize = selectedTool.size || 1;
+  const drawWithBrush = useCallback((centerX: number, centerY: number, color: string) => {    // console.log("DrawWithBrush called", { x: centerX, y: centerY, color, tool: selectedTool.type });    const brushSize = selectedTool.size || 1;
     const halfSize = Math.floor(brushSize / 2);
     const pointsToDraw: { x: number; y: number; color: string }[] = [];
 

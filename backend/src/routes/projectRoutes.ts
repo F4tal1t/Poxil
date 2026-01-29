@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, type Router as ExpressRouter } from "express";
 import { z } from "zod";
 import { requireAuth, optionalAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validation.js";
 import * as projectController from "../controllers/projectController.js";
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 const createProjectSchema = z.object({
   body: z.object({
