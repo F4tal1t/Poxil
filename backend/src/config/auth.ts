@@ -39,11 +39,6 @@ export const getAuth = async () => {
     updateAge: 60 * 60 * 24, // 1 day
   },
   secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL!,
-  trustedOrigins: [
-    "http://localhost:5173",
-    process.env.CLIENT_URL || "http://localhost:5173"
-  ],
   });
   return authInstance;
 };

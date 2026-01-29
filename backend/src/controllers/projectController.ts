@@ -18,10 +18,10 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    res.status(201).json(project);
+    return res.status(201).json(project);
   } catch (error) {
     console.error("Create project error:", error); // Log detailed error
-    res.status(500).json({ error: "Failed to create project" });
+    return res.status(500).json({ error: "Failed to create project" });
   }
 };
 
@@ -32,9 +32,9 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
       orderBy: { updatedAt: "desc" },
     });
 
-    res.json(projects);
+    return res.json(projects);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch projects" });
+    return res.status(500).json({ error: "Failed to fetch projects" });
   }
 };
 
@@ -70,9 +70,9 @@ export const getProject = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    res.json(project);
+    return res.json(project);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch project" });
+    return res.status(500).json({ error: "Failed to fetch project" });
   }
 };
 
@@ -91,9 +91,9 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    res.json({ message: "Project updated successfully" });
+    return res.json({ message: "Project updated successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update project" });
+    return res.status(500).json({ error: "Failed to update project" });
   }
 };
 
@@ -109,8 +109,8 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    res.json({ message: "Project deleted successfully" });
+    return res.json({ message: "Project deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete project" });
+    return res.status(500).json({ error: "Failed to delete project" });
   }
 };

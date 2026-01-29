@@ -191,6 +191,13 @@ export default function LoginPage() {
                     : "Don't have an account? Sign up"}
                 </button>
             </div>
+            
+            <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-xs text-blue-400 text-center font-primary leading-relaxed">
+                   <strong className="block mb-1">Server Inactivity Notice</strong>
+                   The backend server sleeps after inactivity. If login fails or takes too long (>30s), please wait a moment and try again while the server wakes up.
+                </p>
+            </div>
           </form>
         </div>
       </div>

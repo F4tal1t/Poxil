@@ -24,20 +24,22 @@ export const requireAuth = async (
     const session = await auth.api.getSession({ headers: req.headers });
     
     if (!session) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
+      return;
     }
 
     req.user = session.user;
     req.session = session.session;
     next();
   } catch (error) {
-    return res.status(401).json({ error: "Invalid session" });
+    res.status(401).json({ error: "Invalid session" });
+    return;
   }
 };
 
 export const optionalAuth = async (
   req: AuthRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   try {
