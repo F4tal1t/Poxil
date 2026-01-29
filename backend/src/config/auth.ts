@@ -38,6 +38,12 @@ export const getAuth = async () => {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
+  advanced: {
+      defaultCookieAttributes: {
+          sameSite: "none",
+          secure: true,
+      },
+  },
   secret: process.env.BETTER_AUTH_SECRET!,
   });
   return authInstance;
