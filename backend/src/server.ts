@@ -41,7 +41,13 @@ app.options('*', cors({
 // Setup Socket.IO with potential Redis Adapter
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    // Allow Vercel, Localhost, and any explicitly defined client URL
+    origin: [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "https://poxil.vercel.app",
+      "http://localhost:4173", // Preview
+      /\.vercel\.app$/ // All Vercel deployments (previews)
+    ],
     credentials: true,
   },
   // Vercel compatibility
