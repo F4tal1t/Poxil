@@ -55,6 +55,17 @@ function App() {
     });
   }, []);
 
+  // Safety timeout for Session Loading (fixes infinite load on backend misconfig)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (showLoader) { 
+        console.warn("Session loading timed out - Forcing app load. Check VITE_BETTER_AUTH_URL.");
+        setShowLoader(false); 
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [showLoader]);
+
   useEffect(() => {
      if (!isPending && fontsLoaded) {
          // Small delay to ensure the new route is painted before lifting the curtain
