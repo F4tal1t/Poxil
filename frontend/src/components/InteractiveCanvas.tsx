@@ -784,6 +784,14 @@ export default function InteractiveCanvas({
               </div>
           </div>
       )}
+
+      {/* DEBUG OVERLAY - Remove in production */}
+      <div className="absolute top-0 left-0 bg-black/50 text-white text-[10px] p-1 pointer-events-none">
+         Proj: {currentProject ? "Loaded" : "Null"} | 
+         Layer: {activeLayerId || "None"} | 
+         Frame: {currentFrame} |
+         Tool: {selectedTool.type}
+      </div>
     </div>
   );
 }
