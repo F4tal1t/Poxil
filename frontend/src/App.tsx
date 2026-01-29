@@ -8,20 +8,8 @@ import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
 import LoadingScreen from "./components/LoadingScreen";
 
-// Configure Axios Global Defaults
-// Normalize API URL: Remove trailing slash and /api suffix to prevent double segments
-// Fallback to absolute URL if env is missing (for debugging)
+
 let apiUrl = import.meta.env.VITE_API_URL || "https://poxil.onrender.com"; 
-
-// SAFETY CHECK: Prevent pointing to self (Vercel) which causes 405/HTML response
-if (apiUrl.includes("vercel.app")) {
-    console.error(`CRITICAL CONFIG ERROR: VITE_API_URL is set to the Frontend URL (${apiUrl}) instead of the Backend! Switching to default Render URL.`);
-    apiUrl = "https://poxil.onrender.com";
-}
-
-console.log("---------------------------------------------------");
-console.log("frontend config: EFFECTIVE API URL =", apiUrl);
-console.log("---------------------------------------------------");
 
 axios.defaults.baseURL = apiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
 axios.defaults.withCredentials = true;
