@@ -9,7 +9,9 @@ import EditorPage from "./pages/EditorPage";
 import LoadingScreen from "./components/LoadingScreen";
 
 // Configure Axios Global Defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+// Normalize API URL: Remove trailing slash and /api suffix to prevent double segments
+const apiUrl = import.meta.env.VITE_API_URL || "";
+axios.defaults.baseURL = apiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
 axios.defaults.withCredentials = true;
 
 // Helper to detect mobile
@@ -49,6 +51,12 @@ function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!import.meta.env.VITE_API_URL) {
+      console.warn("CRITICAL: VITE_API_URL is missing. API calls will fail (405). Set this in Vercel settings.");
+    }
+  }, []);
 
   useEffect(() => {
     // Wait for fonts or timeout after 2 seconds to prevent infinite loading
