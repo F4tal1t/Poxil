@@ -161,45 +161,34 @@ export default function InteractiveCanvas({
     
     const renderTile = (offsetX: number, offsetY: number) => {
         // Draw background (checkers)
-        const checkSize = pixelSize;
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
 
+        // Debug: Draw a red border to prove we are rendering
+        // ctx.strokeStyle = "red";
+        // ctx.lineWidth = 2;
+        // ctx.strokeRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
+
         // Draw active pixel content
         if (currentProject) {
-            // Onion Skin (Previous Frame - Active Layer)
-            if (showOnionSkin && activeLayerId && currentFrame > 0) {
-                const prevFrame = currentProject.frames[currentFrame - 1];
-                const prevGrid = prevFrame?.layers[activeLayerId];
-                if (prevGrid) {
-                    ctx.globalAlpha = 0.3;
-                    for (let y = 0; y < height; y++) {
-                        for (let x = 0; x < width; x++) {
-                            const color = prevGrid[y]?.[x];
-                            if (color && color !== "transparent") {
-                                ctx.fillStyle = color;
-                                ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
-                            }
-                        }
-                    }
-                    ctx.globalAlpha = 1.0;
-                }
-            }
-
             const frame = currentProject.frames[currentFrame];
             const layers = currentProject.layers || [];
             
+            // console.log("Rendering Frame:", currentFrame, "Layer Count:", layers.length);
+
             [...layers].reverse().forEach(layer => {
                 if (!layer.visible) return;
                 const grid = frame?.layers[layer.id];
+                
                 if (!grid) return;
                 
                 ctx.globalAlpha = layer.opacity / 100;
                 
                 for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const color = grid[y]?.[x] || "transparent";
-                    if (color !== "transparent") {
+                  if (!grid[y]) continue; // Safety check
+                  for (let x = 0; x < width; x++) {
+                    const color = grid[y][x];
+                    if (color && color !== "transparent") {
                         // Skip if moving logic
                         if (moveSnapshot && layer.id === activeLayerId &&
                             x >= moveSnapshot.sourceArea.minX && x <= moveSnapshot.sourceArea.maxX &&
@@ -211,7 +200,7 @@ export default function InteractiveCanvas({
                         ctx.fillStyle = color;
                         ctx.fillRect(offsetX + x * pixelSize, offsetY + y * pixelSize, pixelSize, pixelSize);
                     }
-                }
+                  }
                 }
                 ctx.globalAlpha = 1.0;
             });

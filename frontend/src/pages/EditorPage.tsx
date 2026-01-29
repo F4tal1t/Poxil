@@ -398,6 +398,7 @@ export default function EditorPage() {
             style={{ cursor: isPanning ? 'grabbing' : 'default' }}
           >
             <InteractiveCanvas 
+              key={projectId || "new"} // Force remount when project changes
               width={canvasSize.width} 
               height={canvasSize.height}
               pixelSize={pixelSize}
