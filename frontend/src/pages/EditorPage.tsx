@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { useEditorStore } from "../lib/store";
 import { socket } from "../lib/socket";
@@ -34,6 +34,11 @@ export default function EditorPage() {
 
   const { setCurrentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
   const pixelSize = 16;
+
+  // Protect editor route for non-guest users
+  if (!isSessionLoading && !session && projectId !== 'guest') {
+      return <Navigate to="/login" />;
+  }
 
   // Cleanup effect
   useEffect(() => {

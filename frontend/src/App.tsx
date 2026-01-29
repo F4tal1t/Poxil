@@ -83,7 +83,7 @@ function App() {
             />
             <Route
               path="/editor/:projectId"
-              element={session ? <EditorPage /> : <Navigate to="/login" />}
+              element={<EditorPage />}
             />
           </Routes>
         </BrowserRouter>
