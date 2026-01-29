@@ -163,29 +163,42 @@ export default function InteractiveCanvas({
         // Draw background (checkers)
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
+        
+        // Draw checkerboard pattern
+        ctx.fillStyle = "#e0e0e0";
+        for(let i=0; i<width; i+=1) {
+            for(let j=0; j<height; j+=1) {
+                if((i+j)%2 === 1) {
+                     ctx.fillRect(offsetX + i*pixelSize, offsetY + j*pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
 
         // Debug: Draw a red border to prove we are rendering
-        // ctx.strokeStyle = "red";
-        // ctx.lineWidth = 2;
-        // ctx.strokeRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
 
         // Draw active pixel content
-        if (currentProject) {
+        if (currentProject && currentProject.frames && currentProject.frames[currentFrame]) {
             const frame = currentProject.frames[currentFrame];
             const layers = currentProject.layers || [];
             
+            // Debug log every few frames if needed, but for now just defensive coding
             // console.log("Rendering Frame:", currentFrame, "Layer Count:", layers.length);
 
             [...layers].reverse().forEach(layer => {
                 if (!layer.visible) return;
-                const grid = frame?.layers[layer.id];
+                
+                // Defensive access
+                const grid = frame?.layers?.[layer.id];
                 
                 if (!grid) return;
                 
                 ctx.globalAlpha = layer.opacity / 100;
                 
                 for (let y = 0; y < height; y++) {
-                  if (!grid[y]) continue; // Safety check
+                  if (!grid[y]) continue; // Safety check for row existence
                   for (let x = 0; x < width; x++) {
                     const color = grid[y][x];
                     if (color && color !== "transparent") {
