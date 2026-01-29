@@ -24,6 +24,7 @@ export default function EditorPage() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
   const [isLoading, setIsLoading] = useState(!!projectId);
+  const [accessError, setAccessError] = useState<{ status: number, message: string } | null>(null);
   
   // Auth & Guest State
   const { data: session, isPending: isSessionLoading } = useSession();
@@ -35,10 +36,10 @@ export default function EditorPage() {
   const { setCurrentProject, updatePixels, updatePixel, updateSpecificLayerPixels } = useEditorStore();
   const pixelSize = 16;
 
-  // Protect editor route for non-guest users
-  if (!isSessionLoading && !session && projectId !== 'guest') {
-      return <Navigate to="/login" />;
-  }
+  // Protect editor route for non-guest users - CHANGED: Allow public access attempt
+  // if (!isSessionLoading && !session && projectId !== 'guest') {
+  //    return <Navigate to="/login" />;
+  // }
 
   // Cleanup effect
   useEffect(() => {
@@ -244,8 +245,16 @@ export default function EditorPage() {
             setShowDialog(false);
             setIsLoading(false);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to load project:", error);
+            if (error.response) {
+               setAccessError({ 
+                   status: error.response.status, 
+                   message: error.response.data?.message || "Failed to load project" 
+               });
+            } else {
+               setAccessError({ status: 500, message: "Network error or server unreachable" });
+            }
             setIsLoading(false);
         }
     };
@@ -264,15 +273,17 @@ export default function EditorPage() {
     // Determine identity
     const hasIdentity = !!session?.user;
     
-    if (!hasIdentity) {
-        return;
+    // Allow socket connection for Guests if on Guest Project OR Public Project
+    if (!hasIdentity && projectId !== 'guest') {
+         // It's a public project potentially
+         // We need a temporary guest ID for collaboration on public projects
     }
     
     // We have an identity, ensure dialog is closed
     setShowGuestDialog(false);
 
-    const userName = session?.user?.name || guestName || "Guest";
-    const userId = session?.user?.id || `guest-${guestName}-${Math.floor(Math.random() * 1000)}`;
+    const userName = session?.user?.name || guestName || "Anonymous Guest";
+    const userId = session?.user?.id || `guest-${Math.floor(Math.random() * 10000)}`;
 
     socket.connect();
     
@@ -385,6 +396,31 @@ export default function EditorPage() {
     );
   }
 
+  if (accessError) {
+      return (
+        <div className="h-screen flex flex-col items-center justify-center bg-[#151316] text-white gap-4">
+            <h1 className="text-3xl font-bold text-[#e15959]">{accessError.status === 404 ? "Project Not Found" : "Access Denied"}</h1>
+            <p className="text-gray-400">{accessError.message}</p>
+            <div className="flex gap-4 mt-4">
+                <button 
+                  onClick={() => navigate('/')}
+                  className="px-6 py-2 bg-[#2a2630] rounded hover:bg-[#35303c] transition-colors"
+                >
+                    Back to Home
+                </button>
+                {accessError.status === 403 && (
+                    <button 
+                    onClick={() => navigate('/login')}
+                    className="px-6 py-2 bg-[#df4c16] text-white font-bold rounded hover:bg-[#c93b0b] transition-colors"
+                    >
+                        Log In
+                    </button>
+                )}
+            </div>
+        </div>
+      );
+  }
+
   return (
     <>
       {showDialog && <CanvasSizeDialog onConfirm={handleCanvasCreate} />}
@@ -394,7 +430,7 @@ export default function EditorPage() {
         {/* Pass props to Header for Save Button state */}
         {/* @ts-ignore */}
         <Header 
-          isGuest={!session?.user || projectId === 'guest'} 
+          isGuest={!session?.user} 
           onSave={handleManualSave} 
           isSaving={isSaving}
           onNewFile={() => setShowDialog(true)}
