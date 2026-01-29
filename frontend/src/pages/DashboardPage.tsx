@@ -28,7 +28,12 @@ export default function DashboardPage() {
   const fetchProjects = async () => {
     try {
       const res = await axios.get("/api/projects");
-      setProjects(res.data);
+      if (Array.isArray(res.data)) {
+        setProjects(res.data);
+      } else {
+        console.warn("API returned invalid format (expected array):", res.data);
+        setProjects([]);
+      }
     } catch (error) {
       console.error("Failed to fetch projects", error);
     } finally {

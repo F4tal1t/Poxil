@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSession } from "./lib/auth";
+import axios from "axios";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import EditorPage from "./pages/EditorPage";
 import LoadingScreen from "./components/LoadingScreen";
+
+// Configure Axios Global Defaults
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+axios.defaults.withCredentials = true;
 
 // Helper to detect mobile
 const useIsMobile = () => {

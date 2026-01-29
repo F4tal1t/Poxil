@@ -67,7 +67,7 @@ export default function EditorPage() {
 
     setIsSaving(true);
     try {
-        await axios.put(`${import.meta.env.VITE_API_URL || "/api"}/projects/${projectId}`, {
+        await axios.put(`/api/projects/${projectId}`, {
           frames: state.currentProject?.frames,
           layers: state.currentProject?.layers,
           width: currentProject?.width,
@@ -217,7 +217,7 @@ export default function EditorPage() {
         try {
             if (isSessionLoading) return;
             
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || "/api"}/projects/${projectId}`);
+            const response = await axios.get(`/api/projects/${projectId}`);
             useEditorStore.getState().setCurrentProject(response.data);
             setCanvasSize({ width: response.data.width, height: response.data.height });
             setShowDialog(false);
