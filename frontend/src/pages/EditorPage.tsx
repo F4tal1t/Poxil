@@ -336,11 +336,25 @@ export default function EditorPage() {
     setIsPanning(false);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom((prev) => Math.max(0.1, Math.min(4, prev + delta)));
-  };
+  // Ref for the container to attach non-passive listener
+  const canvasContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      const handleWheel = (e: WheelEvent) => {
+        if (e.ctrlKey || e.metaKey || true) { // Always capture wheel for zoom in this area
+             e.preventDefault();
+             const delta = e.deltaY > 0 ? -0.1 : 0.1;
+             setZoom((prev) => Math.max(0.1, Math.min(4, prev + delta)));
+        }
+      };
+      
+      // Add non-passive listener
+      node.addEventListener('wheel', handleWheel, { passive: false });
+      
+      return () => {
+        node.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, []); // Empty deps as setZoom is stable
 
   if (isLoading) {
     return (
@@ -388,12 +402,12 @@ export default function EditorPage() {
 
           {/* Canvas Area */}
           <div 
+            ref={canvasContainerRef as any}
             className="flex-1 flex items-center justify-center p-4 overflow-hidden bg-[#151316]"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            onWheel={handleWheel}
             onContextMenu={(e) => e.preventDefault()}
             style={{ cursor: isPanning ? 'grabbing' : 'default' }}
           >

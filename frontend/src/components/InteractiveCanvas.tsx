@@ -163,16 +163,6 @@ export default function InteractiveCanvas({
         // Draw background (checkers)
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(offsetX, offsetY, width * pixelSize, height * pixelSize);
-        
-        // Draw checkerboard pattern
-        ctx.fillStyle = "#e0e0e0";
-        for(let i=0; i<width; i+=1) {
-            for(let j=0; j<height; j+=1) {
-                if((i+j)%2 === 1) {
-                     ctx.fillRect(offsetX + i*pixelSize, offsetY + j*pixelSize, pixelSize, pixelSize);
-                }
-            }
-        }
 
         // Debug: Draw a red border to prove we are rendering
         ctx.strokeStyle = "red";
@@ -202,6 +192,9 @@ export default function InteractiveCanvas({
                   for (let x = 0; x < width; x++) {
                     const color = grid[y][x];
                     if (color && color !== "transparent") {
+                        // Debug pixel drawing
+                        // console.log(`Drawing pixel at ${x},${y}: ${color}`);
+                        
                         // Skip if moving logic
                         if (moveSnapshot && layer.id === activeLayerId &&
                             x >= moveSnapshot.sourceArea.minX && x <= moveSnapshot.sourceArea.maxX &&
@@ -802,7 +795,7 @@ export default function InteractiveCanvas({
       <div className="absolute top-0 left-0 bg-black/50 text-white text-[10px] p-1 pointer-events-none">
          Proj: {currentProject ? "Loaded" : "Null"} | 
          Layer: {activeLayerId || "None"} | 
-         Frame: {currentFrame} |
+         Frame: {currentFrame + 1} |
          Tool: {selectedTool.type}
       </div>
     </div>
