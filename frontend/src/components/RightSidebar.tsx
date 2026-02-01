@@ -186,19 +186,19 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
           >
              Preview
           </div>
-          <div 
-             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
-             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
-             onClick={() => scrollToSection('section-layers')}
-          >
-             Layer
-          </div>
            <div 
              className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
              style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
              onClick={() => scrollToSection('section-colors')}
           >
              Colors
+          </div>
+          <div 
+             className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
+             style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+             onClick={() => scrollToSection('section-layers')}
+          >
+             Layer
           </div>
            <div 
              className="vertical-text cursor-pointer hover:text-white transition uppercase tracking-widest text-[#8c8796]"
@@ -216,35 +216,19 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
         <div className="bg-[#151316] rounded-lg p-2 flex items-center justify-center border border-[#2a2630] shadow-inner">
            <canvas 
               ref={previewCanvasRef} 
-              width={200} 
-              height={200}
-              className="max-w-full max-h-[200px]"
+              width={160} 
+              height={160}
+              className="max-w-full max-h-[160px]"
            />
         </div>
       </div>
 
-      {/* Reference Module */}
-      <div id="section-reference" className="p-4 border-b border-[#2a2630]">
-        <h3 className="text-xs font-bold text-[#8c8796] mb-2 uppercase tracking-wider">Reference</h3>
-        <div className="bg-[#151316] rounded-lg p-2 min-h-[100px] border border-[#2a2630] flex flex-col items-center justify-center relative overflow-hidden group">
-            {referenceImage ? (
-                <>
-                  <img src={referenceImage} className="max-w-full max-h-[150px] object-contain" />
-                  <button onClick={() => setReferenceImage(null)} className="absolute top-1 right-1 bg-black/50 p-1 rounded hover:bg-red-500/50 text-white opacity-0 group-hover:opacity-100 transition">
-                    <TrashBin size={12} />
-                  </button>
-                </>
-            ) : (
-                <label className="cursor-pointer text-gray-500 hover:text-white flex flex-col items-center gap-1 w-full h-full justify-center min-h-[100px]">
-                    <Plus size={20} />
-                    <span className="text-xs">Add Image</span>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                </label>
-            )}
-        </div>
+      {/* 2. Color Palette */}
+      <div id="section-colors" className="border-b border-[#2a2630]">
+        <ColorPalette className="!border-l-0 !p-0 !h-auto" />
       </div>
 
-      {/* 2. Layers Module (Above Colors) */}
+      {/* 3. Layers Module */}
       <div id="section-layers" className="flex-1 border-b border-[#2a2630] p-4 flex flex-col min-h-[280px]">
          <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-bold text-[#8c8796] uppercase tracking-wider">Layers</h3>
@@ -357,10 +341,27 @@ export default function RightSidebar({ className = "" }: RightSidebarProps) {
          </div>
       </div>
 
-      {/* 3. Color Palette (Zero padding, No rounded corners) */}
-      <div id="section-colors" className="">
-        <ColorPalette className="!border-l-0 !p-0 !h-auto" />
+      {/* 4. Reference Module */}
+      <div id="section-reference" className="p-4 border-b border-[#2a2630]">
+        <h3 className="text-xs font-bold text-[#8c8796] mb-2 uppercase tracking-wider">Reference</h3>
+        <div className="bg-[#151316] rounded-lg p-2 min-h-[100px] border border-[#2a2630] flex flex-col items-center justify-center relative overflow-hidden group">
+            {referenceImage ? (
+                <>
+                  <img src={referenceImage} className="max-w-full max-h-[150px] object-contain" />
+                  <button onClick={() => setReferenceImage(null)} className="absolute top-1 right-1 bg-black/50 p-1 rounded hover:bg-red-500/50 text-white opacity-0 group-hover:opacity-100 transition">
+                    <TrashBin size={12} />
+                  </button>
+                </>
+            ) : (
+                <label className="cursor-pointer text-gray-500 hover:text-white flex flex-col items-center gap-1 w-full h-full justify-center min-h-[100px]">
+                    <Plus size={20} />
+                    <span className="text-xs">Add Image</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                </label>
+            )}
+        </div>
       </div>
+
     </div>
   </div>
   );
