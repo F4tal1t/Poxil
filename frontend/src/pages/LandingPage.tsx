@@ -287,7 +287,7 @@ export default function LandingPage() {
                  {/* Right: Description */}
                  <div className="text-center md:text-left pl-0 md:pl-8 border-none md:border-solid">
                      <p className="font-primary text-xl text-gray-400 leading-relaxed mb-6">
-                        <span className="text-white font-bold">Multiplayer Engine </span> <br/>
+                        <span className="text-white font-bold">Multi-User Collaboration </span> <br/>
                         Work on the same canvas with your team. Zero-latency updates powered by WebSockets.
                      </p>
                      <p className="font-primary text-sm text-gray-300 uppercase tracking-widest">
