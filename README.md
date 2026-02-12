@@ -1,4 +1,10 @@
-
+<a href="https://peerlist.io/dibyendusahoo03/project/poxil" target="_blank" rel="noreferrer">
+			<img
+			  src="https://dqy38fnwh4fqs.cloudfront.net/website/project-spotlight/project-week-rank-three-light.svg"
+			  alt="Poxil"
+			  style="width: auto; height: 64px;"
+			/>
+		  </a>
 <img width="792" height="198" alt="Dibby (6)" src="https://github.com/user-attachments/assets/76714414-5747-4675-92d9-376810f8b07d" />
 <br/><br/>
 
