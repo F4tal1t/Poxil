@@ -205,9 +205,6 @@ export default function InteractiveCanvas({
                     const color = grid[y][x];
                     if (color && color !== "transparent") {
                         // Debug pixel drawing - verify coordinates are within expected range
-                        if(pixelsDrawn === 0) {
-                           console.log(`First pixel found at ${x},${y} color: ${color}`);
-                        }
                         pixelsDrawn++;
 
                         // Skip if moving logic
